@@ -4,9 +4,10 @@ import android.app.Application;
 import android.content.SharedPreferences;
 import android.widget.Toast;
 
+import com.bndkpntr.antares.db.AntaresDbLoader;
 import com.bndkpntr.antares.events.GetOAuthTokenFailedEvent;
 import com.bndkpntr.antares.model.SharedPreferencesManager;
-import com.bndkpntr.antares.model.SoundCloudInteractor;
+import com.bndkpntr.antares.network.SoundCloudInteractor;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -17,6 +18,7 @@ public class Antares extends Application {
 
     private static SharedPreferencesManager sharedPreferencesManager;
     private static SoundCloudInteractor soundCloudInteractor;
+    private static AntaresDbLoader dbLoader;
 
     public static SharedPreferencesManager getSharedPreferencesManager() {
         return sharedPreferencesManager;
@@ -26,6 +28,10 @@ public class Antares extends Application {
         return soundCloudInteractor;
     }
 
+    public static AntaresDbLoader getDbLoader() {
+        return dbLoader;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -33,6 +39,8 @@ public class Antares extends Application {
         SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, MODE_PRIVATE);
         sharedPreferencesManager = new SharedPreferencesManager(sharedPreferences);
         soundCloudInteractor = new SoundCloudInteractor(sharedPreferencesManager);
+        dbLoader = new AntaresDbLoader(this);
+        dbLoader.open();
 
         EventBus.getDefault().register(this);
     }
@@ -40,6 +48,7 @@ public class Antares extends Application {
     @Override
     public void onTerminate() {
         EventBus.getDefault().unregister(this);
+        dbLoader.close();
         super.onTerminate();
     }
 

@@ -9,6 +9,7 @@ public class SharedPreferencesManager {
     private static final String ACCESS_TOKEN = "AccessCode";
     private static final String REFRESH_TOKEN = "RefreshToken";
     private static final String TOKEN_EXPIRES_AT = "TokenExpiresAt";
+    private static final String RECOMMENDED_CURSOR = "RecommendedCursor";
 
     private final SharedPreferences preferences;
     private final Calendar calendar;
@@ -41,8 +42,18 @@ public class SharedPreferencesManager {
         editor.putString(ACCESS_TOKEN, token.accessToken);
         editor.putString(REFRESH_TOKEN, token.refreshToken);
         Date expirationDate = calendar.getTime();
-        expirationDate.setTime(expirationDate.getTime() + token.expiresIn - 10);
+        expirationDate.setTime(expirationDate.getTime() + (token.expiresIn - 10) * 1000);
         editor.putLong(TOKEN_EXPIRES_AT, expirationDate.getTime());
+        editor.commit();
+    }
+
+    public String getRecommendedCursor() {
+        return preferences.getString(RECOMMENDED_CURSOR, "");
+    }
+
+    public void setRecommendedCursor(String cursor) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(RECOMMENDED_CURSOR, cursor);
         editor.commit();
     }
 }

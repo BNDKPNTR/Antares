@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
@@ -15,13 +16,10 @@ import com.bndkpntr.antares.activities.EndlessRecyclerOnScrollListener;
 import com.bndkpntr.antares.adapters.RecyclerViewAdapter;
 import com.bndkpntr.antares.events.GetRecommendedTracksFailedEvent;
 import com.bndkpntr.antares.events.GetRecommendedTracksSuccessfulEvent;
-import com.bndkpntr.antares.model.Track;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -54,20 +52,21 @@ public class RecommendedFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                scrollListener.reset();
-                adapter.reset();
+                //scrollListener.reset();
+                Antares.getDbLoader().deleteAllTracks();
+                Antares.getSharedPreferencesManager().setRecommendedCursor("");
                 loadRecommendedTracks();
             }
         });
 
-        adapter = new RecyclerViewAdapter(new ArrayList<Track>());
+        adapter = new RecyclerViewAdapter(getContext(), Antares.getDbLoader().fetchAll());
         recyclerView.setAdapter(adapter);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(linearLayoutManager);
         scrollListener = new EndlessRecyclerOnScrollListener(linearLayoutManager) {
             @Override
             public void onLoadMore(int current_page) {
-                Antares.getSoundCloudInteractor().getRecommended(current_page * 10);
+                //Antares.getSoundCloudInteractor().getRecommended();
             }
         };
         recyclerView.setOnScrollListener(scrollListener);
@@ -96,16 +95,18 @@ public class RecommendedFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGetRecommendedTracksSuccessfulEvent(GetRecommendedTracksSuccessfulEvent event) {
-        adapter.addItems(event.getTracks());
+        adapter.changeCursor(Antares.getDbLoader().fetchAll());
+        adapter.notifyDataSetChanged();
         swipeRefreshLayout.setRefreshing(false);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGetRecommendedTracksFailedEvent(GetRecommendedTracksFailedEvent event) {
         swipeRefreshLayout.setRefreshing(false);
+        Toast.makeText(getContext(), "Error while loading data.", Toast.LENGTH_SHORT).show();
     }
 
     private void loadRecommendedTracks() {
-        Antares.getSoundCloudInteractor().getRecommended(0);
+        Antares.getSoundCloudInteractor().getRecommended();
     }
 }

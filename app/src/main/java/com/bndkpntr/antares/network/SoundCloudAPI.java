@@ -16,15 +16,24 @@ public interface SoundCloudAPI {
     String CLIENT_SECRET = "***REMOVED***";
     String REDIRECT_URI = "antares://auth";
     String BASE_URL = "https://api.soundcloud.com/";
-    String LOGIN_URL = BASE_URL + "connect?client_id=" + CLIENT_ID + "&redirect_uri=antares://auth&response_type=code&display=popup";
+    String LOGIN_URL = BASE_URL + "connect?client_id=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code&display=popup";
 
 
     @GET("me/activities?client_id=" + CLIENT_ID)
-    Call<ActivitiesResponse> getRecommended(@Query("oauth_token") String token, @Query("limit") int limit, @Query("offset") int offset);
+    Call<ActivitiesResponse> getRecommended(@Query(QueryParams.OAUTH_TOKEN) String token, @Query(QueryParams.LIMIT) int limit);
+
+    @GET("me/activities?client_id=" + CLIENT_ID)
+    Call<ActivitiesResponse> getRecommended(@Query(QueryParams.OAUTH_TOKEN) String token, @Query(QueryParams.LIMIT) int limit, @Query(QueryParams.CURSOR) String cursor);
 
     @POST("oauth2/token?client_id=" + CLIENT_ID)
     Call<OAuthToken> getOAuthToken(@Body OAuthTokenRequestWithCode message);
 
     @POST("oauth2/token?client_id=" + CLIENT_ID)
     Call<OAuthToken> getOAuthToken(@Body OAuthTokenRequestWithRefreshToken message);
+
+    class QueryParams {
+        static final String OAUTH_TOKEN = "oauth_token";
+        static final String LIMIT = "limit";
+        static final String CURSOR = "cursor";
+    }
 }

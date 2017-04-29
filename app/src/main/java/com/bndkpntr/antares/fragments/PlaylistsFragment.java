@@ -9,9 +9,6 @@ import android.view.ViewGroup;
 
 import com.bndkpntr.antares.R;
 import com.bndkpntr.antares.adapters.RecyclerViewAdapter;
-import com.bndkpntr.antares.model.Track;
-
-import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -33,7 +30,7 @@ public class PlaylistsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_playlists, container, false);
         unbinder = ButterKnife.bind(this, view);
 
-        RecyclerViewAdapter adapter = new RecyclerViewAdapter(new ArrayList<Track>());
+        RecyclerViewAdapter adapter = new RecyclerViewAdapter(getContext(), null);
         recyclerView.setAdapter(adapter);
 
         return view;

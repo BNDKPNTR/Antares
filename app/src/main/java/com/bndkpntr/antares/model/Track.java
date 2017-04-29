@@ -14,4 +14,11 @@ public class Track {
 
     @SerializedName("artwork_url")
     public String artworkUrl;
+
+    public Track(String id, String title, String streamUrl, String artworkUrl) {
+        this.id = id;
+        this.title = title;
+        this.streamUrl = streamUrl;
+        this.artworkUrl = artworkUrl;
+    }
 }
