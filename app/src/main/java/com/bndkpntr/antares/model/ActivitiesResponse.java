@@ -1,6 +1,5 @@
 package com.bndkpntr.antares.model;
 
-import com.bndkpntr.antares.network.SoundCloudAPI;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -21,11 +20,8 @@ public class ActivitiesResponse {
 
         for (ActivitiesContent content : contents) {
             if (content.type.equals("track") || content.type.equals("track-repost")) {
-                if (content.track != null && content.track.streamUrl != null && content.track.artworkUrl != null) {
-                    if (!content.track.streamUrl.contains("client_id")) {
-                        content.track.streamUrl += "?client_id=" + SoundCloudAPI.CLIENT_ID;
-                    }
-                    content.track.artworkUrl = content.track.artworkUrl.replace("large", "t500x500");
+                Track normalizedTrack = Track.tryGetNormalizedTrack(content.track);
+                if (normalizedTrack != null) {
                     result.add(content);
                 }
             }

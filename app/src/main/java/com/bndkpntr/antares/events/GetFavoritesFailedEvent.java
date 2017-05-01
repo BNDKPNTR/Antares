@@ -1,9 +1,10 @@
 package com.bndkpntr.antares.events;
 
-public class GetRecommendedTracksFailedEvent {
+
+public class GetFavoritesFailedEvent {
     private Exception e;
 
-    public GetRecommendedTracksFailedEvent(Exception e) {
+    public GetFavoritesFailedEvent(Exception e) {
         this.e = e;
     }
 

@@ -9,16 +9,19 @@ import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 
+import com.bndkpntr.antares.db.constants.FavoritesTable;
 import com.bndkpntr.antares.db.constants.RecommendedTable;
 import com.bndkpntr.antares.db.constants.TracksTable;
+import com.bndkpntr.antares.db.contracts.FavoritesContract;
 import com.bndkpntr.antares.db.contracts.RecommendedContract;
 
 public class DbContentProvider extends ContentProvider {
 
     private static final int RECOMMENDED_ALL = 1;
     private static final int RECOMMENDED_ID = 2;
+    private static final int FAVORITES_ALL = 3;
+    private static final int FAVORITES_ID = 4;
 
     private static final String AUTHORITY = "com.bndkpntr.antares.db";
     public static final Uri BASE_URI = Uri.parse("content://" + AUTHORITY);
@@ -28,6 +31,8 @@ public class DbContentProvider extends ContentProvider {
     static {
         URIMatcher.addURI(AUTHORITY, RecommendedContract.PATH, RECOMMENDED_ALL);
         URIMatcher.addURI(AUTHORITY, RecommendedContract.PATH + "/#", RECOMMENDED_ID);
+        URIMatcher.addURI(AUTHORITY, FavoritesContract.PATH, FAVORITES_ALL);
+        URIMatcher.addURI(AUTHORITY, FavoritesContract.PATH + "/#", FAVORITES_ID);
     }
 
     private DbHelper dbHelper;
@@ -42,13 +47,21 @@ public class DbContentProvider extends ContentProvider {
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
+
         switch (URIMatcher.match(uri)) {
             case RECOMMENDED_ALL:
                 queryBuilder.setTables(TracksTable.NAME + " INNER JOIN " + RecommendedTable.NAME + " ON " + TracksTable.NAME + "." + TracksTable.ID + "=" + RecommendedTable.NAME + "." + RecommendedTable.ID);
                 break;
             case RECOMMENDED_ID:
                 queryBuilder.setTables(TracksTable.NAME + " INNER JOIN " + RecommendedTable.NAME + " ON " + TracksTable.NAME + "." + TracksTable.ID + "=" + RecommendedTable.NAME + "." + RecommendedTable.ID);
-                queryBuilder.appendWhere(RecommendedTable.ID + "=" + uri.getLastPathSegment());
+                queryBuilder.appendWhere(RecommendedTable.NAME + "." + RecommendedTable.ID + "=" + uri.getLastPathSegment());
+                break;
+            case FAVORITES_ALL:
+                queryBuilder.setTables(TracksTable.NAME + " INNER JOIN " + FavoritesTable.NAME + " ON " + TracksTable.NAME + "." + TracksTable.ID + "=" + FavoritesTable.NAME + "." + FavoritesTable.ID);
+                break;
+            case FAVORITES_ID:
+                queryBuilder.setTables(TracksTable.NAME + " INNER JOIN " + FavoritesTable.NAME + " ON " + TracksTable.NAME + "." + TracksTable.ID + "=" + FavoritesTable.NAME + "." + FavoritesTable.ID);
+                queryBuilder.appendWhere(FavoritesTable.NAME + "." + FavoritesTable.ID + "=" + uri.getLastPathSegment());
                 break;
             default:
                 throw new IllegalStateException("Unknown URI: " + uri);
@@ -74,19 +87,14 @@ public class DbContentProvider extends ContentProvider {
         Uri baseUri;
         switch (URIMatcher.match(uri)) {
             case RECOMMENDED_ALL:
-                ContentValues tracksValues = new ContentValues();
-                tracksValues.put(TracksTable.ID, values.getAsInteger(RecommendedContract.ID));
-                tracksValues.put(TracksTable.TITLE, values.getAsString(RecommendedContract.TITLE));
-                tracksValues.put(TracksTable.STREAM_URL, values.getAsString(RecommendedContract.STREAM_URL));
-                tracksValues.put(TracksTable.ARTWORK_URL, values.getAsString(RecommendedContract.ARTWORK_URL));
-
-                ContentValues recommendedValues = new ContentValues();
-                recommendedValues.put(RecommendedTable.ID, values.getAsInteger(RecommendedContract.ID));
-                recommendedValues.put(RecommendedTable.CREATED_AT, values.getAsLong(RecommendedContract.CREATED_AT));
-
-                db.insert(TracksTable.NAME, null, tracksValues);
-                id = db.insert(RecommendedTable.NAME, null, recommendedValues);
+                db.insert(TracksTable.NAME, null, RecommendedContract.createTracksTableContentValues(values));
+                id = db.insert(RecommendedTable.NAME, null, RecommendedContract.createRecommendedTableContentValues(values));
                 baseUri = RecommendedContract.URI;
+                break;
+            case FAVORITES_ALL:
+                db.insert(TracksTable.NAME, null, FavoritesContract.createTracksTableContentValues(values));
+                id = db.insert(FavoritesTable.NAME, null, FavoritesContract.createFavoritesTableContentValues(values));
+                baseUri = FavoritesContract.URI;
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -102,20 +110,30 @@ public class DbContentProvider extends ContentProvider {
         int rowsDeleted = 0;
         switch (URIMatcher.match(uri)) {
             case RECOMMENDED_ALL:
-//                Cursor cursor = db.query(RecommendedTable.NAME, new String[]{RecommendedTable.ID}, null, null, null, null, null);
-//                while (cursor.moveToNext()) {
-//                    db.delete(TracksTable.NAME, TracksTable.ID + "= ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(RecommendedTable.ID)))});
-//                }
+                Cursor recommendedTableCursor = db.query(RecommendedTable.NAME, new String[]{RecommendedTable.ID}, null, null, null, null, null);
+                while (recommendedTableCursor.moveToNext()) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + "= ?", new String[]{String.valueOf(recommendedTableCursor.getInt(recommendedTableCursor.getColumnIndex(RecommendedTable.ID)))});
+                }
 
                 rowsDeleted = db.delete(RecommendedTable.NAME, selection, selectionArgs);
                 break;
             case RECOMMENDED_ID:
-                String id = uri.getLastPathSegment();
-                if (TextUtils.isEmpty(selection)) {
-                    rowsDeleted = db.delete(TracksTable.NAME, TracksTable.ID + "=" + id, null);
-                } else {
-                    rowsDeleted = db.delete(TracksTable.NAME, TracksTable.ID + "=" + id + " and " + selection, selectionArgs);
+                String recommendedId = uri.getLastPathSegment();
+                rowsDeleted = db.delete(RecommendedTable.NAME, RecommendedTable.ID + " = ?", new String[]{String.valueOf(recommendedId)});
+                db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(recommendedId)});
+                break;
+            case FAVORITES_ALL:
+                Cursor favoritesTableCursor = db.query(FavoritesTable.NAME, new String[]{FavoritesTable.ID}, null, null, null, null, null);
+                while (favoritesTableCursor.moveToNext()) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(favoritesTableCursor.getInt(favoritesTableCursor.getColumnIndex(FavoritesTable.ID)))});
                 }
+
+                rowsDeleted = db.delete(FavoritesTable.NAME, selection, selectionArgs);
+                break;
+            case FAVORITES_ID:
+                String favoritesId = uri.getLastPathSegment();
+                rowsDeleted = db.delete(FavoritesTable.NAME, FavoritesTable.ID + " = ?", new String[]{String.valueOf(favoritesId)});
+                db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(favoritesId)});
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
@@ -127,37 +145,6 @@ public class DbContentProvider extends ContentProvider {
 
     @Override
     public synchronized int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
-//        int uriType = URIMatcher.match(uri);
-//        SQLiteDatabase sqlDB = dbHelper.getWritableDatabase();
-//        int rowsUpdated = 0;
-//        switch (uriType) {
-//            case TODOS:
-//                rowsUpdated = sqlDB.update(TracksTable.NAME,
-//                        values,
-//                        selection,
-//                        selectionArgs);
-//                break;
-//            case TODO_ID:
-//                String id = uri.getLastPathSegment();
-//                if (TextUtils.isEmpty(selection)) {
-//                    rowsUpdated = sqlDB.update(TracksTable.NAME,
-//                            values,
-//                            TracksTable.ID + "=" + id,
-//                            null);
-//                } else {
-//                    rowsUpdated = sqlDB.update(TracksTable.NAME,
-//                            values,
-//                            TracksTable.ID + "=" + id
-//                                    + " and "
-//                                    + selection,
-//                            selectionArgs);
-//                }
-//                break;
-//            default:
-//                throw new IllegalArgumentException("Unknown URI: " + uri);
-//        }
-//        getContext().getContentResolver().notifyChange(uri, null);
-//        return rowsUpdated;
         return 0;
     }
 }

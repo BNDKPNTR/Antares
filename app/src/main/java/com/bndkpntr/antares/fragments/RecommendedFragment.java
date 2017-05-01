@@ -1,5 +1,6 @@
 package com.bndkpntr.antares.fragments;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -17,13 +18,15 @@ import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
 import com.bndkpntr.antares.adapters.RecyclerViewAdapter;
 import com.bndkpntr.antares.db.contracts.RecommendedContract;
-import com.bndkpntr.antares.events.GetRecommendedTracksFailedEvent;
-import com.bndkpntr.antares.events.GetRecommendedTracksSuccessfulEvent;
+import com.bndkpntr.antares.events.GetRecommendedFailedEvent;
+import com.bndkpntr.antares.events.GetRecommendedSuccessfulEvent;
 import com.bndkpntr.antares.model.ActivitiesContent;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -37,7 +40,7 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
     SwipeRefreshLayout swipeRefreshLayout;
 
     Unbinder unbinder;
-    public RecyclerViewAdapter adapter;
+    RecyclerViewAdapter adapter;
 
     public RecommendedFragment() {
     }
@@ -55,14 +58,21 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                adapter = new RecyclerViewAdapter(getContext(), null);
-                recyclerView.setAdapter(adapter);
                 getActivity().getContentResolver().delete(RecommendedContract.URI, null, null);
                 Antares.getSharedPreferencesManager().setRecommendedCursor("");
                 Antares.getSoundCloudInteractor().getRecommended();
             }
         });
 
+        adapter = new RecyclerViewAdapter(getContext(), null, recyclerView);
+        adapter.setOnLoadMoreListener(new RecyclerViewAdapter.OnLoadMoreListener() {
+            @Override
+            public void loadMore() {
+                swipeRefreshLayout.setRefreshing(true);
+                Antares.getSoundCloudInteractor().getRecommended();
+            }
+        });
+        recyclerView.setAdapter(adapter);
         getLoaderManager().initLoader(0, null, this);
         return view;
     }
@@ -86,16 +96,23 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onGetRecommendedTracksSuccessfulEvent(GetRecommendedTracksSuccessfulEvent event) {
-        for (ActivitiesContent content : event.getContents()) {
-            getActivity().getContentResolver().insert(RecommendedContract.URI, RecommendedContract.createContentValues(content));
+    public void onGetRecommendedSuccessfulEvent(GetRecommendedSuccessfulEvent event) {
+        List<ActivitiesContent> contents = event.getContents();
+        ContentValues[] values = new ContentValues[contents.size()];
+        for (int i = 0; i < values.length; ++i) {
+            values[i] = RecommendedContract.createContentValues(contents.get(i));
         }
+
+        getActivity().getContentResolver().bulkInsert(RecommendedContract.URI, values);
+        adapter.setLoaded();
+        swipeRefreshLayout.setRefreshing(false);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onGetRecommendedTracksFailedEvent(GetRecommendedTracksFailedEvent event) {
+    public void onGetRecommendedFailedEvent(GetRecommendedFailedEvent event) {
+        adapter.setLoaded();
         swipeRefreshLayout.setRefreshing(false);
-        Toast.makeText(getContext(), "Error while loading data.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), "Error while loading recommended.", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -105,13 +122,11 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
-        adapter = new RecyclerViewAdapter(getContext(), cursor);
-        recyclerView.setAdapter(adapter);
-        swipeRefreshLayout.setRefreshing(false);
+        adapter.changeCursor(cursor);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        adapter.swapCursor(null);
+        adapter.changeCursor(null);
     }
 }

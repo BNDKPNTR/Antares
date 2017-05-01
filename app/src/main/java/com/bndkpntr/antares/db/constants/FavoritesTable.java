@@ -2,15 +2,15 @@ package com.bndkpntr.antares.db.constants;
 
 import android.database.sqlite.SQLiteDatabase;
 
-public final class RecommendedTable {
-    public static final String NAME = "recommended";
+public class FavoritesTable {
+    public static final String NAME = "favorites";
     public static final String ID = "_id";
-    public static final String CREATED_AT = "createdAt";
+    public static final String ORDER_ID = "orderId";
 
     private static final String CREATE_TABLE =
             "CREATE TABLE IF NOT EXISTS " + NAME + "("
                     + ID + " INTEGER PRIMARY KEY, "
-                    + CREATED_AT + " REAL NOT NULL, "
+                    + ORDER_ID + " REAL NOT NULL, "
                     + "FOREIGN KEY(" + ID + ") REFERENCES " + TracksTable.NAME + "(" + TracksTable.ID + ")"
                     + ");";
 

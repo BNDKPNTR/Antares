@@ -4,10 +4,10 @@ import com.bndkpntr.antares.model.ActivitiesContent;
 
 import java.util.List;
 
-public class GetRecommendedTracksSuccessfulEvent {
+public class GetRecommendedSuccessfulEvent {
     private List<ActivitiesContent> contents;
 
-    public GetRecommendedTracksSuccessfulEvent(List<ActivitiesContent> contents) {
+    public GetRecommendedSuccessfulEvent(List<ActivitiesContent> contents) {
         this.contents = contents;
     }
 

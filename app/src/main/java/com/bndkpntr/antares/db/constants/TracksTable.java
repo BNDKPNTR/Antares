@@ -1,6 +1,9 @@
 package com.bndkpntr.antares.db.constants;
 
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+
+import com.bndkpntr.antares.model.Track;
 
 public class TracksTable {
     public static final String NAME = "tracks";
@@ -27,5 +30,14 @@ public class TracksTable {
     public static void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL(DROP_TABLE);
         onCreate(db);
+    }
+
+    public static Track getTrackByCursor(Cursor cursor) {
+        return new Track(
+                String.valueOf(cursor.getLong(cursor.getColumnIndex(TracksTable.ID))),
+                cursor.getString(cursor.getColumnIndex(TracksTable.TITLE)),
+                cursor.getString(cursor.getColumnIndex(TracksTable.STREAM_URL)),
+                cursor.getString(cursor.getColumnIndex(TracksTable.ARTWORK_URL))
+        );
     }
 }

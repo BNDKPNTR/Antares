@@ -30,7 +30,7 @@ public class PlaylistsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_playlists, container, false);
         unbinder = ButterKnife.bind(this, view);
 
-        RecyclerViewAdapter adapter = new RecyclerViewAdapter(getContext(), null);
+        RecyclerViewAdapter adapter = new RecyclerViewAdapter(getContext(), null, recyclerView);
         recyclerView.setAdapter(adapter);
 
         return view;

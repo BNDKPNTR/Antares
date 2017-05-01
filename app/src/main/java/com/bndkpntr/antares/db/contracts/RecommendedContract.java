@@ -15,7 +15,7 @@ import java.util.Calendar;
 
 import static android.R.attr.format;
 
-public final class RecommendedContract {
+public class RecommendedContract {
     public static final String PATH = "recommended";
 
     public static final Uri URI = Uri.withAppendedPath(DbContentProvider.BASE_URI, PATH);
@@ -52,5 +52,21 @@ public final class RecommendedContract {
         values.put(CREATED_AT, time);
 
         return values;
+    }
+
+    public static ContentValues createTracksTableContentValues(ContentValues values) {
+        ContentValues tracksValues = new ContentValues();
+        tracksValues.put(TracksTable.ID, values.getAsInteger(RecommendedContract.ID));
+        tracksValues.put(TracksTable.TITLE, values.getAsString(RecommendedContract.TITLE));
+        tracksValues.put(TracksTable.STREAM_URL, values.getAsString(RecommendedContract.STREAM_URL));
+        tracksValues.put(TracksTable.ARTWORK_URL, values.getAsString(RecommendedContract.ARTWORK_URL));
+        return tracksValues;
+    }
+
+    public static ContentValues createRecommendedTableContentValues(ContentValues values) {
+        ContentValues recommendedValues = new ContentValues();
+        recommendedValues.put(RecommendedTable.ID, values.getAsInteger(RecommendedContract.ID));
+        recommendedValues.put(RecommendedTable.CREATED_AT, values.getAsLong(RecommendedContract.CREATED_AT));
+        return recommendedValues;
     }
 }
