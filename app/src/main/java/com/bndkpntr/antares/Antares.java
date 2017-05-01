@@ -5,8 +5,8 @@ import android.content.SharedPreferences;
 import android.widget.Toast;
 
 import com.bndkpntr.antares.db.AntaresDbLoader;
+import com.bndkpntr.antares.db.SharedPreferencesManager;
 import com.bndkpntr.antares.events.GetOAuthTokenFailedEvent;
-import com.bndkpntr.antares.model.SharedPreferencesManager;
 import com.bndkpntr.antares.network.SoundCloudInteractor;
 
 import org.greenrobot.eventbus.EventBus;

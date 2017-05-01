@@ -1,6 +1,8 @@
-package com.bndkpntr.antares.model;
+package com.bndkpntr.antares.db;
 
 import android.content.SharedPreferences;
+
+import com.bndkpntr.antares.model.OAuthToken;
 
 import java.util.Calendar;
 import java.util.Date;

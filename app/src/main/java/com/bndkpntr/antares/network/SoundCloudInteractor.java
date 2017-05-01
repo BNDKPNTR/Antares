@@ -3,7 +3,7 @@ package com.bndkpntr.antares.network;
 import android.net.Uri;
 import android.os.Handler;
 
-import com.bndkpntr.antares.Antares;
+import com.bndkpntr.antares.db.SharedPreferencesManager;
 import com.bndkpntr.antares.events.GetOAuthTokenFailedEvent;
 import com.bndkpntr.antares.events.GetOAuthTokenSuccessfulEvent;
 import com.bndkpntr.antares.events.GetRecommendedTracksFailedEvent;
@@ -12,8 +12,6 @@ import com.bndkpntr.antares.model.ActivitiesResponse;
 import com.bndkpntr.antares.model.OAuthToken;
 import com.bndkpntr.antares.model.OAuthTokenRequestWithCode;
 import com.bndkpntr.antares.model.OAuthTokenRequestWithRefreshToken;
-import com.bndkpntr.antares.model.SharedPreferencesManager;
-import com.bndkpntr.antares.model.Track;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -83,12 +81,7 @@ public class SoundCloudInteractor {
                     public void onResponse(ActivitiesResponse data) {
                         if (data != null) {
                             preferencesManager.setRecommendedCursor(Uri.parse(data.nextHref).getQueryParameter(CURSOR));
-
-                            for (Track track : data.getTracks()) {
-                                Antares.getDbLoader().createTrack(track);
-                            }
-
-                            EventBus.getDefault().post(new GetRecommendedTracksSuccessfulEvent(data.getTracks()));
+                            EventBus.getDefault().post(new GetRecommendedTracksSuccessfulEvent(data.getContents()));
                         } else {
                             EventBus.getDefault().post(new GetRecommendedTracksFailedEvent(new NullPointerException("data")));
                         }

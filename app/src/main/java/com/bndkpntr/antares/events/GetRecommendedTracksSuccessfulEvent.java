@@ -1,17 +1,17 @@
 package com.bndkpntr.antares.events;
 
-import com.bndkpntr.antares.model.Track;
+import com.bndkpntr.antares.model.ActivitiesContent;
 
 import java.util.List;
 
 public class GetRecommendedTracksSuccessfulEvent {
-    private List<Track> tracks;
+    private List<ActivitiesContent> contents;
 
-    public GetRecommendedTracksSuccessfulEvent(List<Track> tracks) {
-        this.tracks = tracks;
+    public GetRecommendedTracksSuccessfulEvent(List<ActivitiesContent> contents) {
+        this.contents = contents;
     }
 
-    public List<Track> getTracks() {
-        return tracks;
+    public List<ActivitiesContent> getContents() {
+        return contents;
     }
 }

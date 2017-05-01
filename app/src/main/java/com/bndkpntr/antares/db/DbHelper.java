@@ -4,20 +4,25 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-public class DbHelper extends SQLiteOpenHelper {
+import com.bndkpntr.antares.db.constants.AntaresDb;
+import com.bndkpntr.antares.db.constants.RecommendedTable;
+import com.bndkpntr.antares.db.constants.TracksTable;
 
-    public DbHelper(Context context, String name) {
-        super(context, name, null, DbConstants.DATABASE_VERSION);
+class DbHelper extends SQLiteOpenHelper {
+
+    DbHelper(Context context) {
+        super(context, AntaresDb.NAME, null, AntaresDb.VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL(DbConstants.DATABASE_CREATE_ALL);
+        TracksTable.onCreate(db);
+        RecommendedTable.onCreate(db);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL(DbConstants.DATABASE_DROP_ALL);
-        db.execSQL(DbConstants.DATABASE_CREATE_ALL);
+        TracksTable.onUpgrade(db, oldVersion, newVersion);
+        RecommendedTable.onUpgrade(db, oldVersion, newVersion);
     }
 }

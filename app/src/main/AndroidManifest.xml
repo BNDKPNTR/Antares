@@ -20,6 +20,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.LoginActivity" />
+        <provider
+            android:authorities="com.bndkpntr.antares.db"
+            android:name=".db.DbContentProvider"
+            android:exported="false"/>
     </application>
 
 </manifest>

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.bndkpntr.antares.db.constants.TracksTable;
 import com.bndkpntr.antares.model.Track;
 
 public class AntaresDbLoader {
@@ -17,7 +18,7 @@ public class AntaresDbLoader {
     }
 
     public void open() {
-        dbHelper = new DbHelper(context, DbConstants.DATABASE_NAME);
+        dbHelper = new DbHelper(context);
         db = dbHelper.getWritableDatabase();
         dbHelper.onCreate(db);
     }
@@ -28,38 +29,47 @@ public class AntaresDbLoader {
 
     public long createTrack(Track track) {
         ContentValues values = new ContentValues();
-        values.put(DbConstants.Tracks.KEY_ROWID, track.id);
-        values.put(DbConstants.Tracks.KEY_TITLE, track.title);
-        values.put(DbConstants.Tracks.KEY_STREAM_URL, track.streamUrl);
-        values.put(DbConstants.Tracks.KEY_ARTWORK_URL, track.streamUrl);
+        values.put(TracksTable.ID, track.id);
+        values.put(TracksTable.TITLE, track.title);
+        values.put(TracksTable.STREAM_URL, track.streamUrl);
+        values.put(TracksTable.ARTWORK_URL, track.streamUrl);
 
-        return db.insert(DbConstants.Tracks.DATABASE_TABLE, null, values);
+        return db.insert(TracksTable.NAME, null, values);
+    }
+
+    public long insertTracks(Track... tracks) {
+        long result = 0;
+        for (Track track : tracks) {
+            result += createTrack(track);
+        }
+
+        return result;
     }
 
     public void deleteAllTracks() {
-        db.delete(DbConstants.Tracks.DATABASE_TABLE, null, null);
+        db.delete(TracksTable.NAME, null, null);
     }
 
     public Cursor fetchAll() {
         return db.query(
-                DbConstants.Tracks.DATABASE_TABLE,
+                TracksTable.NAME,
                 new String[]{
-                        DbConstants.Tracks.KEY_ROWID,
-                        DbConstants.Tracks.KEY_TITLE,
-                        DbConstants.Tracks.KEY_STREAM_URL,
-                        DbConstants.Tracks.KEY_ARTWORK_URL
-                }, null, null, null, null, DbConstants.Tracks.KEY_ROWID);
+                        TracksTable.ID,
+                        TracksTable.TITLE,
+                        TracksTable.STREAM_URL,
+                        TracksTable.ARTWORK_URL
+                }, null, null, null, null, TracksTable.ID);
     }
 
     public Track fetchTrack(long rowId) {
         Cursor cursor = db.query(
-                DbConstants.Tracks.DATABASE_TABLE,
+                TracksTable.NAME,
                 new String[]{
-                        DbConstants.Tracks.KEY_ROWID,
-                        DbConstants.Tracks.KEY_TITLE,
-                        DbConstants.Tracks.KEY_STREAM_URL,
-                        DbConstants.Tracks.KEY_ARTWORK_URL
-                }, DbConstants.Tracks.KEY_ROWID + " = ?", new String[]{String.valueOf(rowId)}, null, null, DbConstants.Tracks.KEY_ROWID);
+                        TracksTable.ID,
+                        TracksTable.TITLE,
+                        TracksTable.STREAM_URL,
+                        TracksTable.ARTWORK_URL
+                }, TracksTable.ID + " = ?", new String[]{String.valueOf(rowId)}, null, null, TracksTable.ID);
 
         if (cursor.moveToFirst()) {
             return getTrackByCursor(cursor);
@@ -70,10 +80,10 @@ public class AntaresDbLoader {
 
     public static Track getTrackByCursor(Cursor cursor) {
         return new Track(
-                String.valueOf(cursor.getLong(cursor.getColumnIndex(DbConstants.Tracks.KEY_ROWID))),
-                cursor.getString(cursor.getColumnIndex(DbConstants.Tracks.KEY_TITLE)),
-                cursor.getString(cursor.getColumnIndex(DbConstants.Tracks.KEY_STREAM_URL)),
-                cursor.getString(cursor.getColumnIndex(DbConstants.Tracks.KEY_ARTWORK_URL))
+                String.valueOf(cursor.getLong(cursor.getColumnIndex(TracksTable.ID))),
+                cursor.getString(cursor.getColumnIndex(TracksTable.TITLE)),
+                cursor.getString(cursor.getColumnIndex(TracksTable.STREAM_URL)),
+                cursor.getString(cursor.getColumnIndex(TracksTable.ARTWORK_URL))
         );
     }
 }

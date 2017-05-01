@@ -35,6 +35,10 @@ public class RecyclerViewAdapter extends CursorRecyclerViewAdapter<RecyclerViewA
         }
     }
 
+    public void reset() {
+        swapCursor(null);
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder {
         TextView title;
 

@@ -1,9 +1,12 @@
 package com.bndkpntr.antares.fragments;
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,10 +15,11 @@ import android.widget.Toast;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
-import com.bndkpntr.antares.activities.EndlessRecyclerOnScrollListener;
 import com.bndkpntr.antares.adapters.RecyclerViewAdapter;
+import com.bndkpntr.antares.db.contracts.RecommendedContract;
 import com.bndkpntr.antares.events.GetRecommendedTracksFailedEvent;
 import com.bndkpntr.antares.events.GetRecommendedTracksSuccessfulEvent;
+import com.bndkpntr.antares.model.ActivitiesContent;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -25,16 +29,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
-public class RecommendedFragment extends Fragment {
+public class RecommendedFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     @BindView(R.id.recyclerView)
-    RecyclerView recyclerView;
+    public RecyclerView recyclerView;
     @BindView(R.id.swipeRefreshLayout)
     SwipeRefreshLayout swipeRefreshLayout;
 
     Unbinder unbinder;
-    private RecyclerViewAdapter adapter;
-    private EndlessRecyclerOnScrollListener scrollListener;
+    public RecyclerViewAdapter adapter;
 
     public RecommendedFragment() {
     }
@@ -52,26 +55,15 @@ public class RecommendedFragment extends Fragment {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                //scrollListener.reset();
-                Antares.getDbLoader().deleteAllTracks();
+                adapter = new RecyclerViewAdapter(getContext(), null);
+                recyclerView.setAdapter(adapter);
+                getActivity().getContentResolver().delete(RecommendedContract.URI, null, null);
                 Antares.getSharedPreferencesManager().setRecommendedCursor("");
-                loadRecommendedTracks();
+                Antares.getSoundCloudInteractor().getRecommended();
             }
         });
 
-        adapter = new RecyclerViewAdapter(getContext(), Antares.getDbLoader().fetchAll());
-        recyclerView.setAdapter(adapter);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext());
-        recyclerView.setLayoutManager(linearLayoutManager);
-        scrollListener = new EndlessRecyclerOnScrollListener(linearLayoutManager) {
-            @Override
-            public void onLoadMore(int current_page) {
-                //Antares.getSoundCloudInteractor().getRecommended();
-            }
-        };
-        recyclerView.setOnScrollListener(scrollListener);
-        //loadRecommendedTracks();
-
+        getLoaderManager().initLoader(0, null, this);
         return view;
     }
 
@@ -95,9 +87,9 @@ public class RecommendedFragment extends Fragment {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGetRecommendedTracksSuccessfulEvent(GetRecommendedTracksSuccessfulEvent event) {
-        adapter.changeCursor(Antares.getDbLoader().fetchAll());
-        adapter.notifyDataSetChanged();
-        swipeRefreshLayout.setRefreshing(false);
+        for (ActivitiesContent content : event.getContents()) {
+            getActivity().getContentResolver().insert(RecommendedContract.URI, RecommendedContract.createContentValues(content));
+        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -106,7 +98,20 @@ public class RecommendedFragment extends Fragment {
         Toast.makeText(getContext(), "Error while loading data.", Toast.LENGTH_SHORT).show();
     }
 
-    private void loadRecommendedTracks() {
-        Antares.getSoundCloudInteractor().getRecommended();
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(getContext(), RecommendedContract.URI, RecommendedContract.ALL_COLUMNS, null, null, RecommendedContract.CREATED_AT + " DESC");
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        adapter = new RecyclerViewAdapter(getContext(), cursor);
+        recyclerView.setAdapter(adapter);
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.swapCursor(null);
     }
 }
