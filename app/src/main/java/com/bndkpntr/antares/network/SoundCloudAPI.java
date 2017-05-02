@@ -4,6 +4,7 @@ import com.bndkpntr.antares.model.ActivitiesResponse;
 import com.bndkpntr.antares.model.OAuthToken;
 import com.bndkpntr.antares.model.OAuthTokenRequestWithCode;
 import com.bndkpntr.antares.model.OAuthTokenRequestWithRefreshToken;
+import com.bndkpntr.antares.model.Playlist;
 import com.bndkpntr.antares.model.Track;
 
 import java.util.List;
@@ -19,8 +20,7 @@ public interface SoundCloudAPI {
     String CLIENT_SECRET = "***REMOVED***";
     String REDIRECT_URI = "antares://auth";
     String BASE_URL = "https://api.soundcloud.com/";
-    String LOGIN_URL = BASE_URL + "connect?client_id=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code&display=popup";
-
+    String LOGIN_URL = BASE_URL + "connect?" + QueryParams.CLIENT_ID + "=" + CLIENT_ID + "&redirect_uri=" + REDIRECT_URI + "&response_type=code&display=popup";
 
     @POST("oauth2/token?" + QueryParams.CLIENT_ID + "=" + CLIENT_ID)
     Call<OAuthToken> getOAuthToken(@Body OAuthTokenRequestWithCode message);
@@ -36,6 +36,9 @@ public interface SoundCloudAPI {
 
     @GET("me/favorites?" + QueryParams.CLIENT_ID + "=" + CLIENT_ID)
     Call<List<Track>> getFavorites(@Query(QueryParams.OAUTH_TOKEN) String token, @Query(QueryParams.LIMIT) int limit, @Query(QueryParams.OFFSET) int offset);
+
+    @GET("me/playlists?" + QueryParams.CLIENT_ID + "=" + CLIENT_ID)
+    Call<List<Playlist>> getPlaylists(@Query(QueryParams.OAUTH_TOKEN) String token, @Query(QueryParams.LIMIT) int limit, @Query(QueryParams.OFFSET) int offset);
 
     public class QueryParams {
         public static final String OAUTH_TOKEN = "oauth_token";

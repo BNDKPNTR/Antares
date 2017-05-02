@@ -7,12 +7,15 @@ import com.bndkpntr.antares.events.GetFavoritesFailedEvent;
 import com.bndkpntr.antares.events.GetFavoritesSuccessfulEvent;
 import com.bndkpntr.antares.events.GetOAuthTokenFailedEvent;
 import com.bndkpntr.antares.events.GetOAuthTokenSuccessfulEvent;
+import com.bndkpntr.antares.events.GetPlaylistsFailedEvent;
+import com.bndkpntr.antares.events.GetPlaylistsSuccessfulEvent;
 import com.bndkpntr.antares.events.GetRecommendedFailedEvent;
 import com.bndkpntr.antares.events.GetRecommendedSuccessfulEvent;
 import com.bndkpntr.antares.model.ActivitiesResponse;
 import com.bndkpntr.antares.model.OAuthToken;
 import com.bndkpntr.antares.model.OAuthTokenRequestWithCode;
 import com.bndkpntr.antares.model.OAuthTokenRequestWithRefreshToken;
+import com.bndkpntr.antares.model.Playlist;
 import com.bndkpntr.antares.model.Track;
 
 import org.greenrobot.eventbus.EventBus;
@@ -115,7 +118,7 @@ public class SoundCloudInteractor {
                     @Override
                     public void onResponse(List<Track> data) {
                         if (data != null) {
-                            List<Track> normalizedTracks = new ArrayList<Track>();
+                            List<Track> normalizedTracks = new ArrayList<>();
                             for (Track track : data) {
                                 Track normalizedTrack = Track.tryGetNormalizedTrack(track);
                                 if (normalizedTrack != null) {
@@ -140,6 +143,45 @@ public class SoundCloudInteractor {
             @Override
             public void onError(Exception e) {
                 EventBus.getDefault().post(new GetFavoritesFailedEvent(e));
+            }
+        });
+    }
+
+    public void getPlaylists() {
+        refreshTokenIfNeededThenCall(new ResponseListener<OAuthToken>() {
+            @Override
+            public void onResponse(OAuthToken data) {
+                final int offset = preferencesManager.getPlaylistsOffset();
+                Call<List<Playlist>> getPlaylistsRequest = api.getPlaylists(preferencesManager.getAccessToken(), LIMIT, offset);
+                runCallOnBackgroundThread(getPlaylistsRequest, new ResponseListener<List<Playlist>>() {
+                    @Override
+                    public void onResponse(List<Playlist> data) {
+                        if (data != null) {
+                            List<Playlist> normalizedPlaylists = new ArrayList<>();
+                            for (Playlist playlist : data) {
+                                Playlist normalizedPlaylist = Playlist.tryGetNormalizedPlaylistAndTracks(playlist);
+                                if (normalizedPlaylist != null) {
+                                    normalizedPlaylists.add(normalizedPlaylist);
+                                }
+                            }
+
+                            preferencesManager.setPlaylistsOffset(offset + LIMIT);
+                            EventBus.getDefault().post(new GetPlaylistsSuccessfulEvent(normalizedPlaylists, offset));
+                        } else {
+                            EventBus.getDefault().post(new GetPlaylistsFailedEvent(new NullPointerException("data")));
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        EventBus.getDefault().post(new GetPlaylistsFailedEvent(e));
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                EventBus.getDefault().post(new GetPlaylistsFailedEvent(e));
             }
         });
     }

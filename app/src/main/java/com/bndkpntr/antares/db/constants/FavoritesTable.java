@@ -10,7 +10,7 @@ public class FavoritesTable {
     private static final String CREATE_TABLE =
             "CREATE TABLE IF NOT EXISTS " + NAME + "("
                     + ID + " INTEGER PRIMARY KEY, "
-                    + ORDER_ID + " REAL NOT NULL, "
+                    + ORDER_ID + " INTEGER NOT NULL, "
                     + "FOREIGN KEY(" + ID + ") REFERENCES " + TracksTable.NAME + "(" + TracksTable.ID + ")"
                     + ");";
 

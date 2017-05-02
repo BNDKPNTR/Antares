@@ -17,7 +17,8 @@ import android.widget.Toast;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
-import com.bndkpntr.antares.adapters.RecyclerViewAdapter;
+import com.bndkpntr.antares.adapters.AutoLoadingRecyclerViewAdapter;
+import com.bndkpntr.antares.adapters.TracksRecyclerViewAdapter;
 import com.bndkpntr.antares.db.contracts.FavoritesContract;
 import com.bndkpntr.antares.events.GetFavoritesFailedEvent;
 import com.bndkpntr.antares.events.GetFavoritesSuccessfulEvent;
@@ -42,7 +43,7 @@ public class FavoritesFragment extends Fragment implements LoaderManager.LoaderC
     SwipeRefreshLayout swipeRefreshLayout;
 
     Unbinder unbinder;
-    RecyclerViewAdapter adapter;
+    TracksRecyclerViewAdapter adapter;
 
     public FavoritesFragment() {
     }
@@ -63,8 +64,8 @@ public class FavoritesFragment extends Fragment implements LoaderManager.LoaderC
             }
         });
 
-        adapter = new RecyclerViewAdapter(getContext(), null, recyclerView);
-        adapter.setOnLoadMoreListener(new RecyclerViewAdapter.OnLoadMoreListener() {
+        adapter = new TracksRecyclerViewAdapter(getContext(), null, recyclerView);
+        adapter.setOnLoadMoreListener(new AutoLoadingRecyclerViewAdapter.OnLoadMoreListener() {
             @Override
             public void loadMore() {
                 swipeRefreshLayout.setRefreshing(true);

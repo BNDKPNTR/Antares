@@ -13,6 +13,7 @@ public class SharedPreferencesManager {
     private static final String TOKEN_EXPIRES_AT = "TokenExpiresAt";
     private static final String RECOMMENDED_CURSOR = "RecommendedCursor";
     private static final String FAVORITES_OFFSET = "FavoritesOffset";
+    private static final String PLAYLISTS_OFFSET = "PlaylistsOffset";
 
     private final SharedPreferences preferences;
     private final Calendar calendar;
@@ -67,6 +68,16 @@ public class SharedPreferencesManager {
     public void setFavoritesOffset(int offset) {
         SharedPreferences.Editor editor = preferences.edit();
         editor.putInt(FAVORITES_OFFSET, offset);
+        editor.commit();
+    }
+
+    public int getPlaylistsOffset() {
+        return preferences.getInt(PLAYLISTS_OFFSET, 0);
+    }
+
+    public void setPlaylistsOffset(int offset) {
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt(PLAYLISTS_OFFSET, offset);
         editor.commit();
     }
 }

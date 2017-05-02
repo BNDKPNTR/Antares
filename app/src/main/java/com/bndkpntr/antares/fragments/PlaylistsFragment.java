@@ -1,25 +1,50 @@
 package com.bndkpntr.antares.fragments;
 
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
-import com.bndkpntr.antares.adapters.RecyclerViewAdapter;
+import com.bndkpntr.antares.adapters.AutoLoadingRecyclerViewAdapter;
+import com.bndkpntr.antares.adapters.PlaylistsRecyclerViewAdapter;
+import com.bndkpntr.antares.db.contracts.PlaylistTracksContract;
+import com.bndkpntr.antares.db.contracts.PlaylistsContract;
+import com.bndkpntr.antares.events.GetPlaylistsFailedEvent;
+import com.bndkpntr.antares.events.GetPlaylistsSuccessfulEvent;
+import com.bndkpntr.antares.model.Playlist;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 
-public class PlaylistsFragment extends Fragment {
+public class PlaylistsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
 
     @BindView(R.id.recyclerView)
     RecyclerView recyclerView;
-    Unbinder unbinder;
+    @BindView(R.id.swipeRefreshLayout)
+    SwipeRefreshLayout swipeRefreshLayout;
+
+    private Unbinder unbinder;
+    private PlaylistsRecyclerViewAdapter adapter;
 
     public PlaylistsFragment() {
     }
@@ -30,15 +55,87 @@ public class PlaylistsFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_playlists, container, false);
         unbinder = ButterKnife.bind(this, view);
 
-        RecyclerViewAdapter adapter = new RecyclerViewAdapter(getContext(), null, recyclerView);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                getActivity().getContentResolver().delete(PlaylistsContract.URI, null, null);
+                Antares.getSharedPreferencesManager().setPlaylistsOffset(0);
+                Antares.getSoundCloudInteractor().getPlaylists();
+            }
+        });
+
+        adapter = new PlaylistsRecyclerViewAdapter(getContext(), null, recyclerView);
+        adapter.setOnLoadMoreListener(new AutoLoadingRecyclerViewAdapter.OnLoadMoreListener() {
+            @Override
+            public void loadMore() {
+                swipeRefreshLayout.setRefreshing(true);
+                Antares.getSoundCloudInteractor().getPlaylists();
+            }
+        });
         recyclerView.setAdapter(adapter);
 
+        getLoaderManager().initLoader(0, null, this);
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onPause() {
+        EventBus.getDefault().unregister(this);
+        super.onPause();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         unbinder.unbind();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetPlaylistsSuccessfulEvent(GetPlaylistsSuccessfulEvent event) {
+        List<Playlist> playlists = event.getPlaylists();
+        for(int i = 0; i < playlists.size(); ++i) {
+            Playlist playlist = playlists.get(i);
+            getActivity().getContentResolver().insert(PlaylistsContract.URI, PlaylistsContract.createContentValues(playlist, event.getOffset() + i));
+
+            ContentValues[] values = new ContentValues[playlist.tracks.size()];
+            for (int j = 0; j < values.length; ++j) {
+                values[j] = PlaylistTracksContract.createContentValues(playlist.tracks.get(j), j + 1);
+            }
+
+            getActivity().getContentResolver().bulkInsert(Uri.withAppendedPath(PlaylistTracksContract.URI, playlist.id), values);
+        }
+
+        adapter.setLoaded();
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onGetPlaylistsFailedEvent(GetPlaylistsFailedEvent event) {
+        adapter.setLoaded();
+        swipeRefreshLayout.setRefreshing(false);
+        Toast.makeText(getContext(), "Error while loading playlists.", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        return new CursorLoader(getContext(), PlaylistsContract.URI, PlaylistsContract.ALL_COLUMNS, null, null, PlaylistsContract.ORDER_NO);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        adapter.changeCursor(cursor);
+        adapter.setLoaded();
+        swipeRefreshLayout.setRefreshing(false);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        adapter.changeCursor(null);
     }
 }

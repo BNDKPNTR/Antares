@@ -16,7 +16,8 @@ import android.widget.Toast;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
-import com.bndkpntr.antares.adapters.RecyclerViewAdapter;
+import com.bndkpntr.antares.adapters.AutoLoadingRecyclerViewAdapter;
+import com.bndkpntr.antares.adapters.TracksRecyclerViewAdapter;
 import com.bndkpntr.antares.db.contracts.RecommendedContract;
 import com.bndkpntr.antares.events.GetRecommendedFailedEvent;
 import com.bndkpntr.antares.events.GetRecommendedSuccessfulEvent;
@@ -40,7 +41,7 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
     SwipeRefreshLayout swipeRefreshLayout;
 
     Unbinder unbinder;
-    RecyclerViewAdapter adapter;
+    TracksRecyclerViewAdapter adapter;
 
     public RecommendedFragment() {
     }
@@ -64,8 +65,8 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
             }
         });
 
-        adapter = new RecyclerViewAdapter(getContext(), null, recyclerView);
-        adapter.setOnLoadMoreListener(new RecyclerViewAdapter.OnLoadMoreListener() {
+        adapter = new TracksRecyclerViewAdapter(getContext(), null, recyclerView);
+        adapter.setOnLoadMoreListener(new AutoLoadingRecyclerViewAdapter.OnLoadMoreListener() {
             @Override
             public void loadMore() {
                 swipeRefreshLayout.setRefreshing(true);

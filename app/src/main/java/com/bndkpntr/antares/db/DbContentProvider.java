@@ -11,9 +11,13 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.bndkpntr.antares.db.constants.FavoritesTable;
+import com.bndkpntr.antares.db.constants.PlaylistsTable;
+import com.bndkpntr.antares.db.constants.PlaylistsTracksTable;
 import com.bndkpntr.antares.db.constants.RecommendedTable;
 import com.bndkpntr.antares.db.constants.TracksTable;
 import com.bndkpntr.antares.db.contracts.FavoritesContract;
+import com.bndkpntr.antares.db.contracts.PlaylistTracksContract;
+import com.bndkpntr.antares.db.contracts.PlaylistsContract;
 import com.bndkpntr.antares.db.contracts.RecommendedContract;
 
 public class DbContentProvider extends ContentProvider {
@@ -22,6 +26,9 @@ public class DbContentProvider extends ContentProvider {
     private static final int RECOMMENDED_ID = 2;
     private static final int FAVORITES_ALL = 3;
     private static final int FAVORITES_ID = 4;
+    private static final int PLAYLISTS_ALL = 5;
+    private static final int PLAYLISTS_ID = 6;
+    private static final int PLAYLIST_TRACKS_ID = 7;
 
     private static final String AUTHORITY = "com.bndkpntr.antares.db";
     public static final Uri BASE_URI = Uri.parse("content://" + AUTHORITY);
@@ -33,6 +40,9 @@ public class DbContentProvider extends ContentProvider {
         URIMatcher.addURI(AUTHORITY, RecommendedContract.PATH + "/#", RECOMMENDED_ID);
         URIMatcher.addURI(AUTHORITY, FavoritesContract.PATH, FAVORITES_ALL);
         URIMatcher.addURI(AUTHORITY, FavoritesContract.PATH + "/#", FAVORITES_ID);
+        URIMatcher.addURI(AUTHORITY, PlaylistsContract.PATH, PLAYLISTS_ALL);
+        URIMatcher.addURI(AUTHORITY, PlaylistsContract.PATH + "/#", PLAYLISTS_ID);
+        URIMatcher.addURI(AUTHORITY, PlaylistTracksContract.PATH + "/#", PLAYLIST_TRACKS_ID);
     }
 
     private DbHelper dbHelper;
@@ -62,6 +72,17 @@ public class DbContentProvider extends ContentProvider {
             case FAVORITES_ID:
                 queryBuilder.setTables(TracksTable.NAME + " INNER JOIN " + FavoritesTable.NAME + " ON " + TracksTable.NAME + "." + TracksTable.ID + "=" + FavoritesTable.NAME + "." + FavoritesTable.ID);
                 queryBuilder.appendWhere(FavoritesTable.NAME + "." + FavoritesTable.ID + "=" + uri.getLastPathSegment());
+                break;
+            case PLAYLISTS_ALL:
+                queryBuilder.setTables(PlaylistsTable.NAME);
+                break;
+            case PLAYLISTS_ID:
+                queryBuilder.setTables(PlaylistsTable.NAME);
+                queryBuilder.appendWhere(PlaylistsTable.ID + "=" + uri.getLastPathSegment());
+                break;
+            case PLAYLIST_TRACKS_ID:
+                queryBuilder.setTables(PlaylistsTracksTable.NAME + " INNER JOIN " + TracksTable.NAME + " ON " + PlaylistsTracksTable.NAME + "." + PlaylistsTracksTable.TRACK_ID + "=" + TracksTable.NAME + "." + TracksTable.ID);
+                queryBuilder.appendWhere(PlaylistsTracksTable.NAME + "." + PlaylistsTracksTable.PLAYLIST_ID + "=" + uri.getLastPathSegment());
                 break;
             default:
                 throw new IllegalStateException("Unknown URI: " + uri);
@@ -96,6 +117,15 @@ public class DbContentProvider extends ContentProvider {
                 id = db.insert(FavoritesTable.NAME, null, FavoritesContract.createFavoritesTableContentValues(values));
                 baseUri = FavoritesContract.URI;
                 break;
+            case PLAYLISTS_ALL:
+                id = db.insert(PlaylistsTable.NAME, null, PlaylistsContract.createPlaylistsTableContentValues(values));
+                baseUri = PlaylistsContract.URI;
+                break;
+            case PLAYLIST_TRACKS_ID:
+                db.insert(TracksTable.NAME, null, PlaylistTracksContract.createTracksTableContentValues(values));
+                id = db.insert(PlaylistsTracksTable.NAME, null, PlaylistTracksContract.createPlaylistsTracksTableContentValues(values, Integer.parseInt(uri.getLastPathSegment())));
+                baseUri = PlaylistTracksContract.URI;
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
@@ -108,37 +138,64 @@ public class DbContentProvider extends ContentProvider {
     public synchronized int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         int rowsDeleted = 0;
+        Cursor cursor = null;
         switch (URIMatcher.match(uri)) {
             case RECOMMENDED_ALL:
-                Cursor recommendedTableCursor = db.query(RecommendedTable.NAME, new String[]{RecommendedTable.ID}, null, null, null, null, null);
-                while (recommendedTableCursor.moveToNext()) {
-                    db.delete(TracksTable.NAME, TracksTable.ID + "= ?", new String[]{String.valueOf(recommendedTableCursor.getInt(recommendedTableCursor.getColumnIndex(RecommendedTable.ID)))});
+                cursor = db.query(RecommendedTable.NAME, new String[]{RecommendedTable.ID}, null, null, null, null, null);
+                while (cursor.moveToNext()) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + "= ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(RecommendedTable.ID)))});
                 }
 
                 rowsDeleted = db.delete(RecommendedTable.NAME, selection, selectionArgs);
                 break;
             case RECOMMENDED_ID:
-                String recommendedId = uri.getLastPathSegment();
-                rowsDeleted = db.delete(RecommendedTable.NAME, RecommendedTable.ID + " = ?", new String[]{String.valueOf(recommendedId)});
-                db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(recommendedId)});
+                rowsDeleted = db.delete(RecommendedTable.NAME, RecommendedTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+                db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
                 break;
             case FAVORITES_ALL:
-                Cursor favoritesTableCursor = db.query(FavoritesTable.NAME, new String[]{FavoritesTable.ID}, null, null, null, null, null);
-                while (favoritesTableCursor.moveToNext()) {
-                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(favoritesTableCursor.getInt(favoritesTableCursor.getColumnIndex(FavoritesTable.ID)))});
+                cursor = db.query(FavoritesTable.NAME, new String[]{FavoritesTable.ID}, null, null, null, null, null);
+                while (cursor.moveToNext()) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(FavoritesTable.ID)))});
                 }
 
                 rowsDeleted = db.delete(FavoritesTable.NAME, selection, selectionArgs);
                 break;
             case FAVORITES_ID:
-                String favoritesId = uri.getLastPathSegment();
-                rowsDeleted = db.delete(FavoritesTable.NAME, FavoritesTable.ID + " = ?", new String[]{String.valueOf(favoritesId)});
-                db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(favoritesId)});
+                rowsDeleted = db.delete(FavoritesTable.NAME, FavoritesTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+                db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+                break;
+            case PLAYLISTS_ALL:
+                cursor = db.query(PlaylistsTracksTable.NAME, new String[]{PlaylistsTracksTable.PLAYLIST_ID, PlaylistsTracksTable.TRACK_ID}, null, null, null, null, null);
+                while (cursor.moveToNext()) {
+                    db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.PLAYLIST_ID)))});
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)))});
+                }
+
+                rowsDeleted = db.delete(PlaylistsTracksTable.NAME, selection, selectionArgs);
+                break;
+            case PLAYLISTS_ID:
+                cursor = db.query(PlaylistsTracksTable.NAME, new String[]{PlaylistsTracksTable.PLAYLIST_ID, PlaylistsTracksTable.TRACK_ID}, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()}, null, null, null);
+                while (cursor.moveToNext()) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)))});
+                }
+                db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+                rowsDeleted = db.delete(PlaylistsTracksTable.NAME, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()});
+                break;
+            case PLAYLIST_TRACKS_ID:
+                cursor = db.query(PlaylistsTracksTable.NAME, new String[]{PlaylistsTracksTable.PLAYLIST_ID, PlaylistsTracksTable.TRACK_ID}, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()}, null, null, null);
+                while (cursor.moveToNext()) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)))});
+                }
+                db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+                rowsDeleted = db.delete(PlaylistsTracksTable.NAME, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()});
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);
         }
 
+        if (cursor != null) {
+            cursor.close();
+        }
         getContext().getContentResolver().notifyChange(uri, null);
         return rowsDeleted;
     }
