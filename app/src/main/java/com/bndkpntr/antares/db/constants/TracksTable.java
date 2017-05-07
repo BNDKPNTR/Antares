@@ -11,13 +11,15 @@ public class TracksTable {
     public static final String TITLE = "title";
     public static final String STREAM_URL = "streamUrl";
     public static final String ARTWORK_URL = "artworkUrl";
+    public static final String DURATION = "duration";
 
     private static final String CREATE_TABLE =
             "CREATE TABLE IF NOT EXISTS " + NAME + "("
                     + ID + " INTEGER PRIMARY KEY, "
                     + TITLE + " TEXT NOT NULL, "
                     + STREAM_URL + " TEXT NOT NULL, "
-                    + ARTWORK_URL + " TEXT NOT NULL"
+                    + ARTWORK_URL + " TEXT NOT NULL, "
+                    + DURATION + " INTEGER NOT NULL"
                     + ");";
 
     private static final String DROP_TABLE =
@@ -37,7 +39,8 @@ public class TracksTable {
                 String.valueOf(cursor.getLong(cursor.getColumnIndex(TracksTable.ID))),
                 cursor.getString(cursor.getColumnIndex(TracksTable.TITLE)),
                 cursor.getString(cursor.getColumnIndex(TracksTable.STREAM_URL)),
-                cursor.getString(cursor.getColumnIndex(TracksTable.ARTWORK_URL))
+                cursor.getString(cursor.getColumnIndex(TracksTable.ARTWORK_URL)),
+                cursor.getInt(cursor.getColumnIndex(TracksTable.DURATION))
         );
     }
 }

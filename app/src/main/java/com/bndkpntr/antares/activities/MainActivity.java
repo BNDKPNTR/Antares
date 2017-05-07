@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
@@ -32,15 +34,23 @@ public class MainActivity extends AppCompatActivity {
 
         if (userLoggedIn()) {
             ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
-            adapter.add(new RecommendedFragment(), "Recommended");
-            adapter.add(new FavoritesFragment(), "Favorites");
-            adapter.add(new PlaylistsFragment(), "Playlists");
+            adapter.add(new RecommendedFragment(), getString(R.string.title_recommended_fragment));
+            adapter.add(new FavoritesFragment(), getString(R.string.title_favorites_fragment));
+            adapter.add(new PlaylistsFragment(), getString(R.string.title_playlists_fragment));
             viewPager.setAdapter(adapter);
 
             tabLayout.setupWithViewPager(viewPager);
         } else {
             startActivity(new Intent(this, LoginActivity.class));
         }
+
+        Button btn = (Button) findViewById(R.id.btn);
+        btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this, PlayerActivity.class));
+            }
+        });
     }
 
     private boolean userLoggedIn() {

@@ -16,7 +16,7 @@ import com.bndkpntr.antares.model.Track;
 import com.bumptech.glide.Glide;
 
 public class TracksRecyclerViewAdapter extends AutoLoadingRecyclerViewAdapter<TracksRecyclerViewAdapter.ViewHolder> {
-
+    private OnTrackClickListener onTrackClickListener;
 
     public TracksRecyclerViewAdapter(Context context, Cursor cursor, RecyclerView recyclerView) {
         super(context, cursor, recyclerView);
@@ -30,9 +30,21 @@ public class TracksRecyclerViewAdapter extends AutoLoadingRecyclerViewAdapter<Tr
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Cursor cursor) {
-        Track track = TracksTable.getTrackByCursor(cursor);
+        final Track track = TracksTable.getTrackByCursor(cursor);
         viewHolder.title.setText(track.title);
         Glide.with(viewHolder.imageView.getContext()).load(Uri.parse(track.artworkUrl)).into(viewHolder.imageView);
+        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onTrackClickListener != null) {
+                    onTrackClickListener.onClick(v, track);
+                }
+            }
+        });
+    }
+
+    public void setOnTrackClickListener(OnTrackClickListener listener) {
+        this.onTrackClickListener = listener;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -44,5 +56,9 @@ public class TracksRecyclerViewAdapter extends AutoLoadingRecyclerViewAdapter<Tr
             imageView = (ImageView) itemView.findViewById(R.id.imageView);
             title = (TextView) itemView.findViewById(R.id.title);
         }
+    }
+
+    public interface OnTrackClickListener {
+        void onClick(View view, Track track);
     }
 }

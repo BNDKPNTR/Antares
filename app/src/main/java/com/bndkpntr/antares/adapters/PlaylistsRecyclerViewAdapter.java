@@ -15,11 +15,13 @@ import com.bndkpntr.antares.db.constants.PlaylistsTable;
 import com.bndkpntr.antares.model.Playlist;
 import com.bumptech.glide.Glide;
 
-public class PlaylistsRecyclerViewAdapter  extends AutoLoadingRecyclerViewAdapter<PlaylistsRecyclerViewAdapter.ViewHolder> {
-
+public class PlaylistsRecyclerViewAdapter extends AutoLoadingRecyclerViewAdapter<PlaylistsRecyclerViewAdapter.ViewHolder> {
+    private final Context context;
+    private OnPlaylistClickListener onPlaylistClickListener;
 
     public PlaylistsRecyclerViewAdapter(Context context, Cursor cursor, RecyclerView recyclerView) {
         super(context, cursor, recyclerView);
+        this.context = context;
     }
 
     @Override
@@ -30,9 +32,21 @@ public class PlaylistsRecyclerViewAdapter  extends AutoLoadingRecyclerViewAdapte
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, Cursor cursor) {
-        Playlist playlist = PlaylistsTable.getPlaylistByCursor(cursor);
+        final Playlist playlist = PlaylistsTable.getPlaylistByCursor(cursor);
         viewHolder.title.setText(playlist.title);
         Glide.with(viewHolder.imageView.getContext()).load(Uri.parse(playlist.artworkUrl)).into(viewHolder.imageView);
+        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onPlaylistClickListener != null) {
+                    onPlaylistClickListener.onClick(v, playlist);
+                }
+            }
+        });
+    }
+
+    public void setOnPlaylistClickListener(OnPlaylistClickListener listener) {
+        this.onPlaylistClickListener = listener;
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -44,5 +58,9 @@ public class PlaylistsRecyclerViewAdapter  extends AutoLoadingRecyclerViewAdapte
             imageView = (ImageView) itemView.findViewById(R.id.imageView);
             title = (TextView) itemView.findViewById(R.id.title);
         }
+    }
+
+    public interface OnPlaylistClickListener {
+        void onClick(View view, Playlist playlist);
     }
 }

@@ -67,5 +67,6 @@ public class LoginActivity extends AppCompatActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGetOAuthTokenSuccessfulEvent(GetOAuthTokenSuccessfulEvent event) {
         startActivity(new Intent(this, MainActivity.class));
+        finish();
     }
 }

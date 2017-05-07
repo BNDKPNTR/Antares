@@ -1,6 +1,7 @@
 package com.bndkpntr.antares.fragments;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -16,17 +17,21 @@ import android.widget.Toast;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
+import com.bndkpntr.antares.activities.PlayerActivity;
 import com.bndkpntr.antares.adapters.AutoLoadingRecyclerViewAdapter;
 import com.bndkpntr.antares.adapters.TracksRecyclerViewAdapter;
 import com.bndkpntr.antares.db.contracts.RecommendedContract;
 import com.bndkpntr.antares.events.GetRecommendedFailedEvent;
 import com.bndkpntr.antares.events.GetRecommendedSuccessfulEvent;
 import com.bndkpntr.antares.model.ActivitiesContent;
+import com.bndkpntr.antares.model.Track;
+import com.bndkpntr.antares.services.PlayerService;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -61,11 +66,18 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
             public void onRefresh() {
                 getActivity().getContentResolver().delete(RecommendedContract.URI, null, null);
                 Antares.getSharedPreferencesManager().setRecommendedCursor("");
-                Antares.getSoundCloudInteractor().getRecommended();
             }
         });
 
+        setUpAdapter();
+        recyclerView.setAdapter(adapter);
+        getLoaderManager().initLoader(0, null, this);
+        return view;
+    }
+
+    private void setUpAdapter() {
         adapter = new TracksRecyclerViewAdapter(getContext(), null, recyclerView);
+
         adapter.setOnLoadMoreListener(new AutoLoadingRecyclerViewAdapter.OnLoadMoreListener() {
             @Override
             public void loadMore() {
@@ -73,9 +85,22 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
                 Antares.getSoundCloudInteractor().getRecommended();
             }
         });
-        recyclerView.setAdapter(adapter);
-        getLoaderManager().initLoader(0, null, this);
-        return view;
+
+        adapter.setOnTrackClickListener(new TracksRecyclerViewAdapter.OnTrackClickListener() {
+            @Override
+            public void onClick(View view, Track track) {
+                ArrayList<Track> playlist = getRecommendedPlaylist();
+                int selectedTrackIndex = getSelectedTrackIndex(playlist, track);
+
+                Intent intent = new Intent(getContext(), PlayerService.class);
+                intent.putParcelableArrayListExtra(PlayerService.PLAYLIST_EXTRA, playlist);
+                intent.putExtra(PlayerService.SELECTED_TRACK_INDEX_EXTRA, selectedTrackIndex);
+                getActivity().startService(intent);
+
+                intent = new Intent(getContext(), PlayerActivity.class);
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -113,7 +138,7 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
     public void onGetRecommendedFailedEvent(GetRecommendedFailedEvent event) {
         adapter.setLoaded();
         swipeRefreshLayout.setRefreshing(false);
-        Toast.makeText(getContext(), "Error while loading recommended.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getContext(), R.string.error_load_recommended, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -124,10 +149,56 @@ public class RecommendedFragment extends Fragment implements LoaderManager.Loade
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         adapter.changeCursor(cursor);
+
+        if (cursor.getCount() == 0) {
+            swipeRefreshLayout.setRefreshing(true);
+            Antares.getSoundCloudInteractor().getRecommended();
+        }
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         adapter.changeCursor(null);
+    }
+
+    private ArrayList<Track> getRecommendedPlaylist() {
+        ArrayList<Track> playlist = new ArrayList<>();
+        Cursor cursor = null;
+
+        try {
+            String[] projection = new String[] {
+                    RecommendedContract.ID,
+                    RecommendedContract.TITLE,
+                    RecommendedContract.STREAM_URL,
+                    RecommendedContract.ARTWORK_URL,
+                    RecommendedContract.DURATION
+            };
+
+            cursor = getContext().getContentResolver().query(
+                    RecommendedContract.URI,
+                    projection,
+                    null, null, RecommendedContract.CREATED_AT + " DESC"
+            );
+
+            while (cursor.moveToNext()) {
+                playlist.add(RecommendedContract.getTrackByCursor(cursor));
+            }
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return playlist;
+    }
+
+    private int getSelectedTrackIndex(ArrayList<Track> playlist, Track track) {
+        for (int i = 0; i < playlist.size(); ++i) {
+            if (playlist.get(i).id.equals(track.id)) {
+                return i;
+            }
+        }
+
+        return 0;
     }
 }

@@ -3,4 +3,14 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello recommended fragment</string>
+    <string name="player_notification_title">Antares player</string>
+    <string name="player_notification_text">Music is playing.</string>
+    <string name="default_duration">0:00</string>
+    <string name="title_recommended_fragment">Recommended</string>
+    <string name="title_favorites_fragment">Favorites</string>
+    <string name="title_playlists_fragment">Playlists</string>
+    <string name="error_load_favorites">Error while loading favorites.</string>
+    <string name="error_load_playlists">Error while loading playlists.</string>
+    <string name="error_load_recommended">Error while loading recommended.</string>
+    <string name="error_token_refresh">Error while refreshing your access token.</string>
 </resources>

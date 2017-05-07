@@ -45,6 +45,6 @@ public class Antares extends Application {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onGetOAuthTokenFailedEvent(GetOAuthTokenFailedEvent event) {
-        Toast.makeText(this, "Error while refreshing your access token.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.error_token_refresh, Toast.LENGTH_SHORT).show();
     }
 }

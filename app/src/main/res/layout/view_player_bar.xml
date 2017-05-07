@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<merge xmlns:android="http://schemas.android.com/apk/res/android">
 
-</LinearLayout>
+    <TextView
+        android:background="@color/colorAccent"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:text="Hello"
+        android:textSize="15sp"
+        android:textColor="@color/colorPrimary"/>
+
+    <Button
+        android:id="@+id/playButton"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="Play"/>
+</merge>

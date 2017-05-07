@@ -20,9 +20,15 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.LoginActivity" />
+        <activity android:name=".activities.PlayerActivity"/>
+
         <provider
-            android:authorities="com.bndkpntr.antares.db"
             android:name=".db.DbContentProvider"
+            android:authorities="com.bndkpntr.antares.db"
+            android:exported="false" />
+
+        <service
+            android:name=".services.PlayerService"
             android:exported="false"/>
     </application>
 
