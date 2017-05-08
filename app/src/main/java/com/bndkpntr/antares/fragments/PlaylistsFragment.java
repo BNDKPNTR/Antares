@@ -93,9 +93,6 @@ public class PlaylistsFragment extends Fragment implements LoaderManager.LoaderC
                 intent.putParcelableArrayListExtra(PlayerService.PLAYLIST_EXTRA, getPlaylistTracks(playlist.id));
                 intent.putExtra(PlayerService.SELECTED_TRACK_INDEX_EXTRA, 0);
                 getActivity().startService(intent);
-
-                intent = new Intent(getContext(), PlayerActivity.class);
-                startActivity(intent);
             }
         });
     }

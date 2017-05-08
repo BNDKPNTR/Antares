@@ -1,17 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <TextView
-        android:background="@color/colorAccent"
+    <LinearLayout
+        android:id="@+id/playerBar"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:text="Hello"
-        android:textSize="15sp"
-        android:textColor="@color/colorPrimary"/>
+        android:layout_height="@dimen/playerBarHeight"
+        android:background="@color/colorPrimaryDark"
+        android:translationY="@dimen/playerBarHeight">
 
-    <Button
-        android:id="@+id/playButton"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:text="Play"/>
+        <ImageView
+            android:id="@+id/playerBarImageView"
+            android:layout_width="@dimen/playerBarHeight"
+            android:layout_height="match_parent"
+            android:layout_margin="7dp" />
+
+        <TextView
+            android:id="@+id/playerBarTextView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="64dp"
+            android:layout_marginRight="64dp"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="center_vertical|start"
+            android:maxLines="2"
+            android:textColor="@color/colorPrimary"
+            android:textSize="20sp" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/playerBarFAB"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_margin="16dp"
+            android:tint="@color/colorPrimary"
+            app:fabSize="normal"
+            app:srcCompat="@drawable/ic_pause" />
+    </LinearLayout>
 </merge>

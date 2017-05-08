@@ -25,8 +25,6 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 
 public class PlayerActivity extends AppCompatActivity {
-    public static final String PLAYLIST_EXTRA = "PlaylistExtra";
-    public static final String START_TRACK_NUM_EXTRA = "StartTrackNumExtra";
 
     @BindView(R.id.playPauseFAB)
     FloatingActionButton playPauseFAB;
@@ -45,17 +43,15 @@ public class PlayerActivity extends AppCompatActivity {
 
     private Handler handler;
     private PlayerBinder playerBinder;
-    private boolean runElapsedCounter = false;
     private ServiceConnection playerServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             playerBinder = (PlayerBinder) service;
-            runElapsedCounter = true;
             updateView();
-            playerBinder.setOnPreparedListener(new PlayerBinder.OnPreparedListener() {
+            playerBinder.setOnTrackChangedListener(new PlayerBinder.OnTrackChangedListener() {
                 @Override
-                public void onPrepared() {
-                    runElapsedCounter = true;
+                public void onTrackChanged() {
+                    updateView();
                 }
             });
         }
@@ -81,7 +77,7 @@ public class PlayerActivity extends AppCompatActivity {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                if (runElapsedCounter && playerBinder != null) {
+                if (playerBinder != null && playerBinder.getStreamLoaded()) {
                     int duration = playerBinder.getDuration();
                     int elapsed = playerBinder.getElapsed();
                     seekBar.setProgress(elapsed);
@@ -95,7 +91,7 @@ public class PlayerActivity extends AppCompatActivity {
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser && playerBinder != null) {
+                if (fromUser && playerBinder != null && playerBinder.getStreamLoaded()) {
                     playerBinder.seek(progress);
                 }
             }
@@ -130,11 +126,9 @@ public class PlayerActivity extends AppCompatActivity {
             if (playerBinder.isPlaying()) {
                 playPauseFAB.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play));
                 playerBinder.pause();
-                runElapsedCounter = false;
             } else {
                 playPauseFAB.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause));
                 playerBinder.play();
-                runElapsedCounter = true;
             }
         }
     }
@@ -144,7 +138,6 @@ public class PlayerActivity extends AppCompatActivity {
         if (playerBinder != null && playerBinder.getCurrentTrackIndex() != 0) {
             playerBinder.playPrevious();
             updateView();
-            runElapsedCounter = false;
         }
     }
 
@@ -153,7 +146,6 @@ public class PlayerActivity extends AppCompatActivity {
         if (playerBinder != null && playerBinder.getCurrentTrackIndex() != playerBinder.getPlaylist().size() - 1) {
             playerBinder.playNext();
             updateView();
-            runElapsedCounter = false;
         }
     }
 

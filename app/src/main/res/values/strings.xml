@@ -13,4 +13,5 @@
     <string name="error_load_playlists">Error while loading playlists.</string>
     <string name="error_load_recommended">Error while loading recommended.</string>
     <string name="error_token_refresh">Error while refreshing your access token.</string>
+    <string name="error_player_service">Error while playing music.</string>
 </resources>

@@ -18,7 +18,6 @@ import android.widget.Toast;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
-import com.bndkpntr.antares.activities.PlayerActivity;
 import com.bndkpntr.antares.adapters.AutoLoadingRecyclerViewAdapter;
 import com.bndkpntr.antares.adapters.TracksRecyclerViewAdapter;
 import com.bndkpntr.antares.db.contracts.FavoritesContract;
@@ -94,9 +93,6 @@ public class FavoritesFragment extends Fragment implements LoaderManager.LoaderC
                 intent.putParcelableArrayListExtra(PlayerService.PLAYLIST_EXTRA, playlist);
                 intent.putExtra(PlayerService.SELECTED_TRACK_INDEX_EXTRA, selectedTrackIndex);
                 getActivity().startService(intent);
-
-                intent = new Intent(getContext(), PlayerActivity.class);
-                startActivity(intent);
             }
         });
     }

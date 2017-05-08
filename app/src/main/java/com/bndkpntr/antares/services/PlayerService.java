@@ -2,11 +2,15 @@ package com.bndkpntr.antares.services;
 
 import android.app.Notification;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.net.wifi.WifiManager;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.support.annotation.Nullable;
+import android.widget.Toast;
 
 import com.bndkpntr.antares.R;
 import com.bndkpntr.antares.model.Track;
@@ -14,7 +18,7 @@ import com.bndkpntr.antares.model.Track;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class PlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener {
+public class PlayerService extends Service implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
     public static final String PLAYLIST_EXTRA = "PlaylistExtra";
     public static final String SELECTED_TRACK_INDEX_EXTRA = "SelectedTrackIndexExtra";
 
@@ -22,7 +26,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private MediaPlayer mediaPlayer;
     private final ArrayList<Track> playlist = new ArrayList<>();
     private int currentTrackIndex;
-    private PlayerBinder.OnPreparedListener onPreparedListener;
+    private boolean streamLoaded;
+    private WifiManager.WifiLock wifiLock;
+    private PlayerBinder.OnTrackChangedListener onTrackChangedListener;
 
     @Override
     public void onCreate() {
@@ -31,6 +37,10 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
+        mediaPlayer.setOnErrorListener(this);
+        mediaPlayer.setWakeMode(getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
+        wifiLock = ((WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE)).createWifiLock(WifiManager.WIFI_MODE_FULL, "myLock");
+        wifiLock.acquire();
 
         Notification notification = new Notification.Builder(getApplicationContext())
                 .setContentTitle(getString(R.string.player_notification_title))
@@ -58,10 +68,6 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         return playerBinder;
     }
 
-    public void setOnPreparedListener(PlayerBinder.OnPreparedListener listener) {
-        this.onPreparedListener = listener;
-    }
-
     public ArrayList<Track> getPlaylist() {
         return playlist;
     }
@@ -70,19 +76,26 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         return currentTrackIndex;
     }
 
+    public boolean getStreamLoaded() {
+        return streamLoaded;
+    }
+
+    public void setOnTrackChangedListener(PlayerBinder.OnTrackChangedListener listener) {
+        onTrackChangedListener = listener;
+    }
+
     @Override
     public void onDestroy() {
         mediaPlayer.release();
         stopForeground(true);
+        wifiLock.release();
         super.onDestroy();
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
         mp.start();
-        if (onPreparedListener != null) {
-            onPreparedListener.onPrepared();
-        }
+        streamLoaded = true;
     }
 
     private void setUpPlaylist(Intent intent) {
@@ -105,9 +118,15 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
 
     private void prepareMediaPlayer() {
         try {
+            streamLoaded = false;
             mediaPlayer.reset();
             mediaPlayer.setDataSource(playlist.get(currentTrackIndex).streamUrl);
             mediaPlayer.prepareAsync();
+
+            if (onTrackChangedListener != null) {
+                onTrackChangedListener.onTrackChanged();
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -148,18 +167,16 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     }
 
     public int getElapsed() {
-        try {
-            return mediaPlayer.getCurrentPosition();
-        } catch (IllegalStateException e) {
-            return 0;
-        }
+        return mediaPlayer.getCurrentPosition();
     }
 
     public int getDuration() {
-        try {
-            return mediaPlayer.getDuration();
-        } catch (IllegalStateException e) {
-            return 0;
-        }
+        return mediaPlayer.getDuration();
+    }
+
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        Toast.makeText(getApplicationContext(), R.string.error_player_service, Toast.LENGTH_SHORT).show();
+        return false;
     }
 }

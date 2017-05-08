@@ -24,6 +24,7 @@
         android:textSize="30sp"
         android:gravity="center"
         android:ellipsize="end"
+        android:maxLines="1"
         android:layout_margin="16dp"/>
 
     <LinearLayout

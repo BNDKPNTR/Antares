@@ -20,6 +20,8 @@ import com.bndkpntr.antares.db.contracts.PlaylistTracksContract;
 import com.bndkpntr.antares.db.contracts.PlaylistsContract;
 import com.bndkpntr.antares.db.contracts.RecommendedContract;
 
+import java.util.ArrayList;
+
 public class DbContentProvider extends ContentProvider {
 
     private static final int RECOMMENDED_ALL = 1;
@@ -142,11 +144,18 @@ public class DbContentProvider extends ContentProvider {
         switch (URIMatcher.match(uri)) {
             case RECOMMENDED_ALL:
                 cursor = db.query(RecommendedTable.NAME, new String[]{RecommendedTable.ID}, null, null, null, null, null);
+
+                ArrayList<String> trackIds = new ArrayList<>();
+
                 while (cursor.moveToNext()) {
-                    db.delete(TracksTable.NAME, TracksTable.ID + "= ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(RecommendedTable.ID)))});
+                    trackIds.add(cursor.getString(cursor.getColumnIndex(RecommendedTable.ID)));
                 }
 
                 rowsDeleted = db.delete(RecommendedTable.NAME, selection, selectionArgs);
+
+                for (int i = 0; i < trackIds.size(); ++i) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + "= ?", new String[]{trackIds.get(i)});
+                }
                 break;
             case RECOMMENDED_ID:
                 rowsDeleted = db.delete(RecommendedTable.NAME, RecommendedTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
@@ -154,11 +163,18 @@ public class DbContentProvider extends ContentProvider {
                 break;
             case FAVORITES_ALL:
                 cursor = db.query(FavoritesTable.NAME, new String[]{FavoritesTable.ID}, null, null, null, null, null);
+
+                trackIds = new ArrayList<>();
+
                 while (cursor.moveToNext()) {
-                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(FavoritesTable.ID)))});
+                    trackIds.add(cursor.getString(cursor.getColumnIndex(FavoritesTable.ID)));
                 }
 
                 rowsDeleted = db.delete(FavoritesTable.NAME, selection, selectionArgs);
+
+                for (int i = 0; i < trackIds.size(); ++i) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{trackIds.get(i)});
+                }
                 break;
             case FAVORITES_ID:
                 rowsDeleted = db.delete(FavoritesTable.NAME, FavoritesTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
@@ -166,28 +182,53 @@ public class DbContentProvider extends ContentProvider {
                 break;
             case PLAYLISTS_ALL:
                 cursor = db.query(PlaylistsTracksTable.NAME, new String[]{PlaylistsTracksTable.PLAYLIST_ID, PlaylistsTracksTable.TRACK_ID}, null, null, null, null, null);
+
+                ArrayList<String> playlistIds = new ArrayList<>();
+                trackIds = new ArrayList<>();
+
                 while (cursor.moveToNext()) {
-                    db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.PLAYLIST_ID)))});
-                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)))});
+                    playlistIds.add(cursor.getString(cursor.getColumnIndex(PlaylistsTracksTable.PLAYLIST_ID)));
+                    trackIds.add(cursor.getString(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)));
                 }
 
                 rowsDeleted = db.delete(PlaylistsTracksTable.NAME, selection, selectionArgs);
+
+                for (int i = 0; i < playlistIds.size(); ++i) {
+                    db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{playlistIds.get(i)});
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{trackIds.get(i)});
+                }
                 break;
             case PLAYLISTS_ID:
                 cursor = db.query(PlaylistsTracksTable.NAME, new String[]{PlaylistsTracksTable.PLAYLIST_ID, PlaylistsTracksTable.TRACK_ID}, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()}, null, null, null);
+
+                trackIds = new ArrayList<>();
+
                 while (cursor.moveToNext()) {
-                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)))});
+                    trackIds.add(cursor.getString(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)));
                 }
-                db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+
                 rowsDeleted = db.delete(PlaylistsTracksTable.NAME, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()});
+
+                db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+                for (int i = 0; i < trackIds.size(); ++i) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{trackIds.get(i)});
+                }
                 break;
             case PLAYLIST_TRACKS_ID:
                 cursor = db.query(PlaylistsTracksTable.NAME, new String[]{PlaylistsTracksTable.PLAYLIST_ID, PlaylistsTracksTable.TRACK_ID}, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()}, null, null, null);
+
+                trackIds = new ArrayList<>();
+
                 while (cursor.moveToNext()) {
-                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{String.valueOf(cursor.getInt(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)))});
+                    trackIds.add(cursor.getString(cursor.getColumnIndex(PlaylistsTracksTable.TRACK_ID)));
                 }
-                db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+
                 rowsDeleted = db.delete(PlaylistsTracksTable.NAME, PlaylistsTracksTable.PLAYLIST_ID + " = ?", new String[]{uri.getLastPathSegment()});
+
+                db.delete(PlaylistsTable.NAME, PlaylistsTable.ID + " = ?", new String[]{uri.getLastPathSegment()});
+                for (int i = 0; i < trackIds.size(); ++i) {
+                    db.delete(TracksTable.NAME, TracksTable.ID + " = ?", new String[]{trackIds.get(i)});
+                }
                 break;
             default:
                 throw new IllegalArgumentException("Unknown URI: " + uri);

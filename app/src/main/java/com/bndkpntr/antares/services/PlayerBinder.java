@@ -53,11 +53,15 @@ public class PlayerBinder extends Binder {
         return playerService.getCurrentTrackIndex();
     }
 
-    public void setOnPreparedListener(OnPreparedListener listener) {
-        playerService.setOnPreparedListener(listener);
+    public boolean getStreamLoaded() {
+        return playerService.getStreamLoaded();
     }
 
-    public interface OnPreparedListener {
-        void onPrepared();
+    public void setOnTrackChangedListener(PlayerBinder.OnTrackChangedListener listener) {
+        playerService.setOnTrackChangedListener(listener);
+    }
+
+    public interface OnTrackChangedListener {
+        void onTrackChanged();
     }
 }
