@@ -61,6 +61,13 @@
             app:fabSize="mini"
             app:srcCompat="@drawable/ic_skip_previous" />
 
+        <com.github.jorgecastilloprz.FABProgressCircle
+            android:id="@+id/playPauseFABProgressCircle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:reusable="true"
+            app:arcColor="@color/colorPrimaryDark">
+
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/playPauseFAB"
             android:layout_width="wrap_content"
@@ -69,6 +76,7 @@
             android:tint="@color/colorPrimary"
             app:fabSize="normal"
             app:srcCompat="@drawable/ic_play" />
+        </com.github.jorgecastilloprz.FABProgressCircle>
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/nextFAB"

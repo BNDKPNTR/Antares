@@ -31,7 +31,6 @@
         android:id="@+id/playerBar"
         android:layout_width="match_parent"
         android:layout_height="@dimen/playerBarHeight"
-        app:dependent="@+id/viewPager"
-        android:layout_gravity="bottom"/>
+        android:layout_gravity="bottom" />
 
 </android.support.design.widget.CoordinatorLayout>

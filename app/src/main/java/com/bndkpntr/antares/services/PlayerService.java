@@ -28,7 +28,7 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     private int currentTrackIndex;
     private boolean streamLoaded;
     private WifiManager.WifiLock wifiLock;
-    private PlayerBinder.OnTrackChangedListener onTrackChangedListener;
+    private PlayerBinder.OnPlayerStateChangedListener onPlayerStateChangedListener;
 
     @Override
     public void onCreate() {
@@ -80,8 +80,8 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
         return streamLoaded;
     }
 
-    public void setOnTrackChangedListener(PlayerBinder.OnTrackChangedListener listener) {
-        onTrackChangedListener = listener;
+    public void setOnPlayerStateChangedListener(PlayerBinder.OnPlayerStateChangedListener listener) {
+        onPlayerStateChangedListener = listener;
     }
 
     @Override
@@ -96,6 +96,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
     public void onPrepared(MediaPlayer mp) {
         mp.start();
         streamLoaded = true;
+        if (onPlayerStateChangedListener != null) {
+            onPlayerStateChangedListener.onBufferingFinished();
+        }
     }
 
     private void setUpPlaylist(Intent intent) {
@@ -123,8 +126,9 @@ public class PlayerService extends Service implements MediaPlayer.OnPreparedList
             mediaPlayer.setDataSource(playlist.get(currentTrackIndex).streamUrl);
             mediaPlayer.prepareAsync();
 
-            if (onTrackChangedListener != null) {
-                onTrackChangedListener.onTrackChanged();
+            if (onPlayerStateChangedListener != null) {
+                onPlayerStateChangedListener.onTrackChanged();
+                onPlayerStateChangedListener.onBufferingStarted();
             }
 
         } catch (IOException e) {

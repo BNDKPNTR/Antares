@@ -2,28 +2,32 @@ package com.bndkpntr.antares.views;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.animation.FastOutLinearInInterpolator;
+import android.support.v4.view.animation.FastOutSlowInInterpolator;
 import android.util.AttributeSet;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.TranslateAnimation;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bndkpntr.antares.R;
 import com.bumptech.glide.Glide;
+import com.github.jorgecastilloprz.FABProgressCircle;
 
-public class PlayerBarView extends LinearLayout {
+public class PlayerBarView extends RelativeLayout {
 
-    private LinearLayout playerBar;
+    private RelativeLayout playerBar;
     private ImageView playerBarImageView;
     private TextView playerBarTextView;
     private FloatingActionButton playerBarFAB;
+    private FABProgressCircle playerBarFABProgressCircle;
     private View dependentView;
+    private float height;
 
     private int animationDurationInMs = 500;
     private boolean isVisible = false;
@@ -44,26 +48,33 @@ public class PlayerBarView extends LinearLayout {
     }
 
     private void init(Context context, AttributeSet attrs) {
+
+        playerBar = (RelativeLayout) inflate(context, R.layout.view_player_bar, this);
+        playerBarImageView = (ImageView) findViewById(R.id.playerBarImageView);
+        playerBarTextView = (TextView) findViewById(R.id.playerBarTextView);
+        playerBarFAB = (FloatingActionButton) findViewById(R.id.playerBarFAB);
+        playerBarFABProgressCircle = (FABProgressCircle)findViewById(R.id.playPauseFABProgressCircle);
+
         if (attrs != null) {
-            TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.PlayerBarView);
+            TypedArray array = context.obtainStyledAttributes(attrs, new int[]{android.R.attr.layout_height});
             try {
-                int dependentId = array.getResourceId(R.styleable.PlayerBarView_dependent, -1);
-                dependentView = findViewById(dependentId);
+                height = array.getDimensionPixelSize(0, -1);
+                playerBar.setTranslationY(height);
             } finally {
                 array.recycle();
             }
         }
 
-        LayoutInflater.from(context).inflate(R.layout.view_player_bar, this, true);
-        playerBar = (LinearLayout) findViewById(R.id.playerBar);
-        playerBarImageView = (ImageView) findViewById(R.id.playerBarImageView);
-        playerBarTextView = (TextView) findViewById(R.id.playerBarTextView);
-        playerBarFAB = (FloatingActionButton) findViewById(R.id.playerBarFAB);
+        playerBar.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
     }
 
-    public void setPlayerBarClickListener(OnClickListener listener) {
-        playerBarImageView.setOnClickListener(listener);
+
+    public void setOnTitleClickListener(OnClickListener listener) {
         playerBarTextView.setOnClickListener(listener);
+    }
+
+    public void setOnImageClickListener(OnClickListener listener) {
+        playerBarImageView.setOnClickListener(listener);
     }
 
     public void setDependentView(View view) {
@@ -79,7 +90,7 @@ public class PlayerBarView extends LinearLayout {
         return isVisible;
     }
 
-    public void setFABOnClickListener(OnClickListener listener) {
+    public void setOnFABClickListener(OnClickListener listener) {
         playerBarFAB.setOnClickListener(listener);
     }
 
@@ -87,11 +98,17 @@ public class PlayerBarView extends LinearLayout {
         playerBarFAB.setImageDrawable(ContextCompat.getDrawable(this.getContext(), drawableId));
     }
 
-    public void showPlayerBar() {
-        TranslateAnimation animation = new TranslateAnimation(0, 0, 0, 0 - playerBar.getMeasuredHeight());
-        animation.setFillAfter(true);
-        animation.setDuration(animationDurationInMs);
+    public void showLoading() {
+        playerBarFAB.setEnabled(false);
+        playerBarFABProgressCircle.show();
+    }
 
+    public void endLoading() {
+        playerBarFAB.setEnabled(true);
+        playerBarFABProgressCircle.hide();
+    }
+
+    public void showPlayerBar() {
         int from = dependentView.getMeasuredHeight();
         int to = from - playerBar.getMeasuredHeight();
         ValueAnimator valueAnimator = ValueAnimator.ofInt(from, to);
@@ -106,16 +123,28 @@ public class PlayerBarView extends LinearLayout {
         });
 
         valueAnimator.setDuration(animationDurationInMs);
+        valueAnimator.setInterpolator(new FastOutSlowInInterpolator());
         valueAnimator.start();
-        playerBar.startAnimation(animation);
+
+        playerBar.animate()
+                .translationYBy(-height)
+                .setDuration(animationDurationInMs)
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .start();
+
+        playerBarFABProgressCircle.animate()
+                .scaleX(1)
+                .scaleY(1)
+                .setDuration(animationDurationInMs / 2)
+                .setStartDelay(animationDurationInMs / 2)
+                .setInterpolator(new FastOutLinearInInterpolator())
+                .start();
+
+
         isVisible = true;
     }
 
     public void hidePlayerBar() {
-        TranslateAnimation animation = new TranslateAnimation(0, 0, -playerBar.getMeasuredHeight(), 0);
-        animation.setFillAfter(true);
-        animation.setDuration(animationDurationInMs);
-
         int from = dependentView.getMeasuredHeight();
         int to = from + playerBar.getMeasuredHeight();
         ValueAnimator valueAnimator = ValueAnimator.ofInt(from, to);
@@ -130,8 +159,22 @@ public class PlayerBarView extends LinearLayout {
         });
 
         valueAnimator.setDuration(animationDurationInMs);
+        valueAnimator.setInterpolator(new FastOutSlowInInterpolator());
         valueAnimator.start();
-        playerBar.startAnimation(animation);
+
+        playerBar.animate()
+                .translationYBy(height)
+                .setDuration(animationDurationInMs)
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .start();
+
+        playerBarFABProgressCircle.animate()
+                .scaleX(0)
+                .scaleY(0)
+                .setDuration(animationDurationInMs / 2)
+                .setInterpolator(new FastOutSlowInInterpolator())
+                .start();
+
         isVisible = false;
     }
 }

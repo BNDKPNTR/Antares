@@ -39,21 +39,22 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             playerBinder = (PlayerBinder) service;
+            updatePlayerBarView();
 
-            if (playerBinder.getPlaylist().size() != 0) {
-                Track currentTrack = playerBinder.getPlaylist().get(playerBinder.getCurrentTrackIndex());
-                playerBar.setTrackData(currentTrack.title, currentTrack.artworkUrl);
-
-                if (!playerBar.getIsVisible()) {
-                    playerBar.showPlayerBar();
-                }
-            }
-
-            playerBinder.setOnTrackChangedListener(new PlayerBinder.OnTrackChangedListener() {
+            playerBinder.setOnPlayerStateChangedListener(new PlayerBinder.OnPlayerStateChangedListener() {
                 @Override
                 public void onTrackChanged() {
-                    Track currentTrack = playerBinder.getPlaylist().get(playerBinder.getCurrentTrackIndex());
-                    playerBar.setTrackData(currentTrack.title, currentTrack.artworkUrl);
+                    updatePlayerBarView();
+                }
+
+                @Override
+                public void onBufferingStarted() {
+                    playerBar.showLoading();
+                }
+
+                @Override
+                public void onBufferingFinished() {
+                    playerBar.endLoading();
                 }
             });
         }
@@ -86,21 +87,23 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, LoginActivity.class));
         }
 
-        playerBar.setPlayerBarClickListener(new View.OnClickListener() {
+        playerBar.setOnTitleClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(MainActivity.this, PlayerActivity.class));
             }
         });
 
-        playerBar.setOnClickListener(new View.OnClickListener() {
+        playerBar.setOnImageClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, PlayerActivity.class));
+                if (playerBar.getIsVisible()) {
+                    playerBar.hidePlayerBar();
+                }
             }
         });
 
-        playerBar.setFABOnClickListener(new View.OnClickListener() {
+        playerBar.setOnFABClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (playerBinder != null) {
@@ -130,5 +133,28 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean userLoggedIn() {
         return Antares.getSharedPreferencesManager().containsToken();
+    }
+
+    private void updatePlayerBarView() {
+        if (playerBinder.getPlaylist().size() != 0) {
+            Track currentTrack = playerBinder.getPlaylist().get(playerBinder.getCurrentTrackIndex());
+            playerBar.setTrackData(currentTrack.title, currentTrack.artworkUrl);
+
+            if (playerBinder.getStreamLoaded()) {
+                playerBar.endLoading();
+            } else {
+                playerBar.showLoading();
+            }
+
+            if (playerBinder.isPlaying()) {
+                playerBar.setFABDrawable(R.drawable.ic_pause);
+            } else {
+                playerBar.setFABDrawable(R.drawable.ic_play);
+            }
+
+            if (!playerBar.getIsVisible()) {
+                playerBar.showPlayerBar();
+            }
+        }
     }
 }

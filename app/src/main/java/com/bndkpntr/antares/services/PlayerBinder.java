@@ -57,11 +57,13 @@ public class PlayerBinder extends Binder {
         return playerService.getStreamLoaded();
     }
 
-    public void setOnTrackChangedListener(PlayerBinder.OnTrackChangedListener listener) {
-        playerService.setOnTrackChangedListener(listener);
+    public void setOnPlayerStateChangedListener(OnPlayerStateChangedListener listener) {
+        playerService.setOnPlayerStateChangedListener(listener);
     }
 
-    public interface OnTrackChangedListener {
+    public interface OnPlayerStateChangedListener {
         void onTrackChanged();
+        void onBufferingStarted();
+        void onBufferingFinished();
     }
 }

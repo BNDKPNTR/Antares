@@ -2,40 +2,47 @@
 <merge xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
-        android:id="@+id/playerBar"
+    <ImageView
+        android:id="@+id/playerBarImageView"
+        android:layout_width="@dimen/playerBarHeight"
+        android:layout_height="match_parent"
+        android:layout_margin="7dp"
+        android:clickable="true" />
+
+    <TextView
+        android:id="@+id/playerBarTextView"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/playerBarHeight"
-        android:background="@color/colorPrimaryDark"
-        android:translationY="@dimen/playerBarHeight">
+        android:layout_height="match_parent"
+        android:layout_marginEnd="72dp"
+        android:layout_marginRight="72dp"
+        android:layout_toEndOf="@+id/playerBarImageView"
+        android:layout_toRightOf="@+id/playerBarImageView"
+        android:clickable="true"
+        android:ellipsize="end"
+        android:gravity="center_vertical|start"
+        android:maxLines="2"
+        android:textColor="@color/colorPrimary"
+        android:textSize="20sp" />
 
-        <ImageView
-            android:id="@+id/playerBarImageView"
-            android:layout_width="@dimen/playerBarHeight"
-            android:layout_height="match_parent"
-            android:layout_margin="7dp" />
-
-        <TextView
-            android:id="@+id/playerBarTextView"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="64dp"
-            android:layout_marginRight="64dp"
-            android:layout_weight="1"
-            android:ellipsize="end"
-            android:gravity="center_vertical|start"
-            android:maxLines="2"
-            android:textColor="@color/colorPrimary"
-            android:textSize="20sp" />
+    <com.github.jorgecastilloprz.FABProgressCircle
+        android:id="@+id/playPauseFABProgressCircle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        app:reusable="true"
+        android:translationY="-40dp"
+        android:scaleX="0"
+        android:scaleY="0"
+        app:arcColor="@color/colorPrimary">
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/playerBarFAB"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_margin="16dp"
+            android:clickable="true"
             android:tint="@color/colorPrimary"
-            app:fabSize="normal"
-            app:srcCompat="@drawable/ic_pause" />
-    </LinearLayout>
+            app:srcCompat="@drawable/ic_play" />
+    </com.github.jorgecastilloprz.FABProgressCircle>
 </merge>

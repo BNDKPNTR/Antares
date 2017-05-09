@@ -19,6 +19,7 @@ import com.bndkpntr.antares.model.Track;
 import com.bndkpntr.antares.services.PlayerBinder;
 import com.bndkpntr.antares.services.PlayerService;
 import com.bumptech.glide.Glide;
+import com.github.jorgecastilloprz.FABProgressCircle;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -40,6 +41,8 @@ public class PlayerActivity extends AppCompatActivity {
     FloatingActionButton nextFAB;
     @BindView(R.id.titleTV)
     TextView titleTV;
+    @BindView(R.id.playPauseFABProgressCircle)
+    FABProgressCircle playPauseFABProgressCircle;
 
     private Handler handler;
     private PlayerBinder playerBinder;
@@ -48,10 +51,22 @@ public class PlayerActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             playerBinder = (PlayerBinder) service;
             updateView();
-            playerBinder.setOnTrackChangedListener(new PlayerBinder.OnTrackChangedListener() {
+            playerBinder.setOnPlayerStateChangedListener(new PlayerBinder.OnPlayerStateChangedListener() {
                 @Override
                 public void onTrackChanged() {
                     updateView();
+                }
+
+                @Override
+                public void onBufferingStarted() {
+                    playPauseFAB.setEnabled(false);
+                    playPauseFABProgressCircle.show();
+                }
+
+                @Override
+                public void onBufferingFinished() {
+                    playPauseFAB.setEnabled(true);
+                    playPauseFABProgressCircle.hide();
                 }
             });
         }
@@ -154,8 +169,20 @@ public class PlayerActivity extends AppCompatActivity {
 
         titleTV.setText(selectedTrack.title);
         Glide.with(this).load(Uri.parse(selectedTrack.artworkUrl)).into(imageView);
-        playPauseFAB.setEnabled(true);
-        playPauseFAB.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause));
+
+        if (playerBinder.getStreamLoaded()) {
+            playPauseFAB.setEnabled(true);
+            playPauseFABProgressCircle.hide();
+        } else {
+            playPauseFAB.setEnabled(false);
+            playPauseFABProgressCircle.show();
+        }
+
+        if (playerBinder.isPlaying()) {
+            playPauseFAB.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause));
+        } else {
+            playPauseFAB.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play));
+        }
 
         if (playerBinder.getCurrentTrackIndex() != 0) {
             previousFAB.setEnabled(true);
