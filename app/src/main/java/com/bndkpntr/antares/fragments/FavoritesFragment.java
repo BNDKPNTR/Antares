@@ -137,7 +137,7 @@ public class FavoritesFragment extends Fragment implements LoaderManager.LoaderC
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(getContext(), FavoritesContract.URI, FavoritesContract.ALL_COLUMNS, null, null, FavoritesContract.ORDER_NO);
+        return new CursorLoader(getContext(), FavoritesContract.URI, FavoritesContract.ALL_COLUMNS, null, null, FavoritesContract.ORDER_NUM);
     }
 
     @Override
@@ -171,7 +171,7 @@ public class FavoritesFragment extends Fragment implements LoaderManager.LoaderC
             cursor = getContext().getContentResolver().query(
                     FavoritesContract.URI,
                     projection,
-                    null, null, FavoritesContract.ORDER_NO);
+                    null, null, FavoritesContract.ORDER_NUM);
 
             while (cursor.moveToNext()) {
                 favorites.add(FavoritesContract.getTrackByCursor(cursor));

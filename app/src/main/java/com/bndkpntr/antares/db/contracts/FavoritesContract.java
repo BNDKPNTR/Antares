@@ -19,7 +19,7 @@ public class FavoritesContract {
     public static final String STREAM_URL = TracksTable.NAME + "." + TracksTable.STREAM_URL;
     public static final String ARTWORK_URL = TracksTable.NAME + "." + TracksTable.ARTWORK_URL;
     public static final String DURATION = TracksTable.NAME + "." + TracksTable.DURATION;
-    public static final String ORDER_NO = FavoritesTable.NAME + "." + FavoritesTable.ORDER_ID;
+    public static final String ORDER_NUM = FavoritesTable.NAME + "." + FavoritesTable.ORDER_NUM;
 
     public static final String[] ALL_COLUMNS = {
             ID,
@@ -27,7 +27,7 @@ public class FavoritesContract {
             STREAM_URL,
             ARTWORK_URL,
             DURATION,
-            ORDER_NO
+            ORDER_NUM
     };
 
     public static Track getTrackByCursor(Cursor cursor) {
@@ -41,7 +41,7 @@ public class FavoritesContract {
         values.put(STREAM_URL, track.streamUrl);
         values.put(ARTWORK_URL, track.artworkUrl);
         values.put(DURATION, track.duration);
-        values.put(ORDER_NO, orderNo);
+        values.put(ORDER_NUM, orderNo);
 
         return values;
     }
@@ -59,7 +59,7 @@ public class FavoritesContract {
     public static ContentValues createFavoritesTableContentValues(ContentValues values) {
         ContentValues favoritesValues = new ContentValues();
         favoritesValues.put(FavoritesTable.ID, values.getAsInteger(FavoritesContract.ID));
-        favoritesValues.put(FavoritesTable.ORDER_ID, values.getAsInteger(FavoritesContract.ORDER_NO));
+        favoritesValues.put(FavoritesTable.ORDER_NUM, values.getAsInteger(FavoritesContract.ORDER_NUM));
         return favoritesValues;
     }
 }

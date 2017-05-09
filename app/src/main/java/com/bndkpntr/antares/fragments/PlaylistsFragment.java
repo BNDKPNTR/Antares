@@ -18,7 +18,6 @@ import android.widget.Toast;
 
 import com.bndkpntr.antares.Antares;
 import com.bndkpntr.antares.R;
-import com.bndkpntr.antares.activities.PlayerActivity;
 import com.bndkpntr.antares.adapters.AutoLoadingRecyclerViewAdapter;
 import com.bndkpntr.antares.adapters.PlaylistsRecyclerViewAdapter;
 import com.bndkpntr.antares.db.contracts.PlaylistTracksContract;
@@ -143,7 +142,7 @@ public class PlaylistsFragment extends Fragment implements LoaderManager.LoaderC
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return new CursorLoader(getContext(), PlaylistsContract.URI, PlaylistsContract.ALL_COLUMNS, null, null, PlaylistsContract.ORDER_NO);
+        return new CursorLoader(getContext(), PlaylistsContract.URI, PlaylistsContract.ALL_COLUMNS, null, null, PlaylistsContract.ORDER_NUM);
     }
 
     @Override

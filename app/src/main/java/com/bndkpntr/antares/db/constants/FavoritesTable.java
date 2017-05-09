@@ -5,12 +5,12 @@ import android.database.sqlite.SQLiteDatabase;
 public class FavoritesTable {
     public static final String NAME = "favorites";
     public static final String ID = "_id";
-    public static final String ORDER_ID = "orderId";
+    public static final String ORDER_NUM = "orderNum";
 
     private static final String CREATE_TABLE =
             "CREATE TABLE IF NOT EXISTS " + NAME + "("
                     + ID + " INTEGER PRIMARY KEY, "
-                    + ORDER_ID + " INTEGER NOT NULL, "
+                    + ORDER_NUM + " INTEGER NOT NULL, "
                     + "FOREIGN KEY(" + ID + ") REFERENCES " + TracksTable.NAME + "(" + TracksTable.ID + ")"
                     + ");";
 

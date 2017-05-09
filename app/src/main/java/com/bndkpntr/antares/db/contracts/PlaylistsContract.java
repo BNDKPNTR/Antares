@@ -15,13 +15,13 @@ public class PlaylistsContract {
     public static final String ID = PlaylistsTable.NAME + "." + PlaylistsTable.ID;
     public static final String TITLE = PlaylistsTable.NAME + "." + PlaylistsTable.TITLE;
     public static final String ARTWORK_URL = PlaylistsTable.NAME + "." + PlaylistsTable.ARTWORK_URL;
-    public static final String ORDER_NO = PlaylistsTable.NAME + "." + PlaylistsTable.ORDER_NO;
+    public static final String ORDER_NUM = PlaylistsTable.NAME + "." + PlaylistsTable.ORDER_NUM;
 
     public static final String[] ALL_COLUMNS = {
             ID,
             TITLE,
             ARTWORK_URL,
-            ORDER_NO
+            ORDER_NUM
     };
 
     public static ContentValues createContentValues(Playlist playlist, int orderNo) {
@@ -29,7 +29,7 @@ public class PlaylistsContract {
         values.put(ID, playlist.id);
         values.put(TITLE, playlist.title);
         values.put(ARTWORK_URL, playlist.artworkUrl);
-        values.put(ORDER_NO, orderNo);
+        values.put(ORDER_NUM, orderNo);
         return values;
     }
 
@@ -38,7 +38,7 @@ public class PlaylistsContract {
         playlistsValues.put(PlaylistsTable.ID, values.getAsInteger(PlaylistsContract.ID));
         playlistsValues.put(PlaylistsTable.TITLE, values.getAsString(PlaylistsContract.TITLE));
         playlistsValues.put(PlaylistsTable.ARTWORK_URL, values.getAsString(PlaylistsContract.ARTWORK_URL));
-        playlistsValues.put(PlaylistsTable.ORDER_NO, values.getAsInteger(PlaylistsContract.ORDER_NO));
+        playlistsValues.put(PlaylistsTable.ORDER_NUM, values.getAsInteger(PlaylistsContract.ORDER_NUM));
         return playlistsValues;
     }
 }

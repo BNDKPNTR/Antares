@@ -10,14 +10,14 @@ public class PlaylistsTable {
     public static final String ID = "_id";
     public static final String TITLE = "title";
     public static final String ARTWORK_URL = "artworkUrl";
-    public static final String ORDER_NO = "orderNo";
+    public static final String ORDER_NUM = "orderNum";
 
     private static final String CREATE_TABLE =
             "CREATE TABLE IF NOT EXISTS " + NAME + "("
                     + ID + " INTEGER PRIMARY KEY, "
                     + TITLE + " TEXT NOT NULL, "
                     + ARTWORK_URL + " TEXT NOT NULL, "
-                    + ORDER_NO + " INTEGER NOT NULL"
+                    + ORDER_NUM + " INTEGER NOT NULL"
                     + ");";
 
     private static final String DROP_TABLE =
